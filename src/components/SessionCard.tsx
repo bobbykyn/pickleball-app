@@ -118,7 +118,7 @@ interface SessionCardProps {
       {/* RSVP Status */}
       <div className="mb-6">
         <div className="flex items-center space-x-1 bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm font-medium">
-          <span>Who's Playing:</span>
+          <span>Who&apos;s Playing:</span>
           {maybeRSVPs.length > 0 && (
             <span className="text-yellow-600">{maybeRSVPs.length} maybe</span>
           )}

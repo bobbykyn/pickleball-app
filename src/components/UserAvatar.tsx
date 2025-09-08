@@ -1,5 +1,3 @@
-import { User } from 'lucide-react'
-
 interface UserAvatarProps {
   profile?: {
     name: string

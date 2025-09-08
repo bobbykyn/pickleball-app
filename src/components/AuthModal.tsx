@@ -66,7 +66,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         setMessage('Check your email for verification link!')
       }
       
-    } catch (error: any) {
+    } catch (error: Error | any) {
       setMessage(error.message)
     } finally {
       setLoading(false)
@@ -82,7 +82,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         }
       })
       if (error) throw error
-    } catch (error: any) {
+    } catch (error: Error | any) {
       setMessage(error.message)
       setLoading(false)
     }
