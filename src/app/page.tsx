@@ -100,6 +100,15 @@ export default function Home() {
         .eq('user_id', user.id)
         .single()
   
+      // Get user's name for notifications
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', user.id)
+        .single()
+  
+      const userName = profile?.name || 'Someone'
+  
       if (existingRSVP) {
         // Update existing RSVP
         const { error } = await supabase
@@ -119,6 +128,29 @@ export default function Home() {
           })
   
         if (error) throw error
+      }
+  
+      // Send RSVP notification email
+      if (status === 'yes') {
+        try {
+          const response = await fetch('/api/send-rsvp-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              sessionId, 
+              newMemberName: userName,
+              rsvpStatus: status
+            }),
+          })
+  
+          if (!response.ok) {
+            console.error('Failed to send RSVP notifications')
+          }
+        } catch (emailError) {
+          console.error('RSVP email error:', emailError)
+        }
       }
   
       // Refresh sessions to show updated RSVPs
