@@ -12,7 +12,8 @@ interface CreateSessionModalProps {
 }
 
 export default function CreateSessionModal({ isOpen, onClose, onSessionCreated }: CreateSessionModalProps) {
- // Smart default date/time
+  const [customLocation, setCustomLocation] = useState('')
+  // Smart default date/time
 const getDefaultDateTime = () => {
   const now = new Date()
   const currentYear = now.getFullYear()
@@ -33,6 +34,15 @@ const getDefaultDateTime = () => {
   const [title, setTitle] = useState('')
   const [dateTime, setDateTime] = useState(getDefaultDateTime())
   const [location, setLocation] = useState('Pick & Match Megabox')
+
+  // Add location options
+const locationOptions = [
+  'Pick & Match Megabox',
+  'Stackd Hopewell',
+  'Go Park Sai Sha',
+  'Bay Pickle',
+  'Laguna Block 27'
+]
   const [maxPlayers, setMaxPlayers] = useState(8)
   const [duration, setDuration] = useState(1.0)
   const [notes, setNotes] = useState('')
@@ -183,15 +193,35 @@ setMessage('Session created successfully!')
             <label className="block text-sm font-medium text-gray-700 mb-1">
               <MapPin className="w-4 h-4 inline mr-1" />
               Location
+              <span 
+      className="ml-1 text-xs text-gray-500 cursor-help" 
+      title="Select any location below, enter your own, or leave default: Megabox"
+    >
+      ℹ️
+    </span>
             </label>
-            <input
-              type="text"
-              placeholder="Pick & Match Megabox"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
-              required
-            />
+
+            {location === 'Custom Location...' ? (
+    <input
+      type="text"
+      placeholder="Enter custom location"
+      value={customLocation}
+      onChange={(e) => setCustomLocation(e.target.value)}
+      className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+      required
+    />
+  ) : (
+    <select
+      value={location}
+      onChange={(e) => setLocation(e.target.value)}
+      className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+      required
+    >
+      {locationOptions.map(option => (
+        <option key={option} value={option}>{option}</option>
+      ))}
+    </select>
+  )}
           </div>
 
           <div>

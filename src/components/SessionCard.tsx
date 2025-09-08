@@ -4,13 +4,14 @@ import { Calendar, MapPin, Users, Clock, Trash2 } from 'lucide-react'
 import UserAvatar from './UserAvatar'
 
 interface SessionCardProps {
-    session: Session
-    currentUserId?: string
-    onDelete?: (sessionId: string) => void
-    onRSVP?: (sessionId: string, status: 'yes' | 'maybe' | 'no') => void
-  }
+  session: Session
+  currentUserId?: string
+  currentUserEmail?: string  // Add this
+  onDelete?: (sessionId: string) => void
+  onRSVP?: (sessionId: string, status: 'yes' | 'maybe' | 'no') => void
+}
 
-  export default function SessionCard({ session, currentUserId, onDelete, onRSVP }: SessionCardProps) {
+export default function SessionCard({ session, currentUserId, currentUserEmail, onDelete, onRSVP }: SessionCardProps) {
     const yesRSVPs = session.rsvps?.filter(rsvp => rsvp.status === 'yes') || []
     const maybeRSVPs = session.rsvps?.filter(rsvp => rsvp.status === 'maybe') || []
     
@@ -24,6 +25,8 @@ interface SessionCardProps {
     }
     
     const isCreator = currentUserId === session.created_by
+const isAdmin = currentUserEmail === 'bobbykyn@gmail.com'
+const canDelete = isCreator || isAdmin
     
     // NEW: Add RSVP logic
     const currentUserRSVP = session.rsvps?.find(rsvp => rsvp.user_id === currentUserId)
@@ -54,13 +57,13 @@ interface SessionCardProps {
       <span>{yesRSVPs.length}/{session.max_players}</span>
     </div>
     {isCreator && (
-      <button
-        onClick={handleDelete}
-        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-        title="Delete session"
-      >
-        <Trash2 className="w-4 h-4" />
-      </button>
+     <button
+     onClick={handleDelete}
+     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+     title={isAdmin ? "Delete session (Admin)" : "Delete session"}
+   >
+     <Trash2 className="w-4 h-4" />
+   </button>
     )}
   </div>
 </div>
@@ -102,8 +105,8 @@ interface SessionCardProps {
     </div>
   </div>
   {attendeeCount > 1 && (
-    <div className="text-green-600 text-sm font-medium">
-      Cost splits as more join!
+    <div className="text-green-600 text-sm font-bold font-medium">
+      OJ!!
     </div>
   )}
 </div>
@@ -124,9 +127,9 @@ interface SessionCardProps {
           )}
         </div>
         {yesRSVPs.length > 0 ? (
-  <div className="flex flex-wrap gap-2">
+  <div className="flex flex-wrap gap-4">  {/* Changed gap from 2 to 4 */}
     {yesRSVPs.map((rsvp) => (
-      <div key={rsvp.id} className="flex items-center space-x-2 bg-teal-100 text-teal-800 px-3 py-2 rounded-full">
+      <div key={rsvp.id} className="flex items-center space-x-3 bg-teal-100 text-teal-800 px-4 py-2 rounded-full">  {/* Added space-x-3 and px-4 */}
         <UserAvatar profile={rsvp.profiles} size="sm" />
         <span className="text-sm font-medium">
           {rsvp.profiles?.name || 'Player'}

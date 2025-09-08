@@ -90,6 +90,19 @@ export default function Home() {
   }
   const handleRSVP = async (sessionId: string, status: 'yes' | 'maybe' | 'no') => {
     if (!user) return
+    
+      try {
+        // Check max players limit for 'yes' RSVPs
+        if (status === 'yes') {
+          const session = sessions.find(s => s.id === sessionId)
+          const currentYesRSVPs = session?.rsvps?.filter(rsvp => rsvp.status === 'yes').length || 0
+          
+          if (currentYesRSVPs >= (session?.max_players || 8)) {
+            alert('Sorry, this session is full! Maximum players reached.')
+            return
+          }
+        }
+      }
   
     try {
       // Check if user already has an RSVP
@@ -165,7 +178,7 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">🏓 Pickleball Crew</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">🏓 雞仔 Pickle</h1>
           <p className="text-xl text-gray-600">Loading...</p>
         </div>
       </div>
@@ -178,8 +191,8 @@ export default function Home() {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 py-6 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">🏓 Pickleball Crew</h1>
-            <p className="text-gray-600 mt-1">Book and join games with your friends</p>
+            <h1 className="text-3xl font-bold text-gray-900">🏓 雞仔 Pickle</h1>
+            <p className="text-gray-600 mt-1">Let's Pickle Time!!</p>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -220,12 +233,13 @@ export default function Home() {
   <div className="space-y-6">
     {sessions.map((session) => (
   <SessionCard 
-    key={session.id} 
-    session={session} 
-    currentUserId={user?.id}
-    onDelete={handleDeleteSession}
-    onRSVP={handleRSVP}
-  />
+  key={session.id} 
+  session={session} 
+  currentUserId={user?.id}
+  currentUserEmail={user?.email}  // Add this line
+  onDelete={handleDeleteSession}
+  onRSVP={handleRSVP}
+/>
 ))}
   </div>
             ) : (
