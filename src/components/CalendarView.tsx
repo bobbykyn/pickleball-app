@@ -4,9 +4,10 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday
 interface CalendarViewProps {
   sessions: Session[]
   darkMode: boolean
+  onDateClick?: (date: Date) => void
 }
 
-export default function CalendarView({ sessions, darkMode }: CalendarViewProps) {
+export default function CalendarView({ sessions, darkMode, onDateClick }: CalendarViewProps) {
   const currentDate = new Date()
   const currentMonth = startOfMonth(currentDate)
   const nextMonth = startOfMonth(addMonths(currentDate, 1))
@@ -35,7 +36,7 @@ export default function CalendarView({ sessions, darkMode }: CalendarViewProps) 
         return `${baseClasses} ${darkMode ? 'bg-gray-600 text-white' : 'bg-gray-200 text-gray-900'} font-bold`
       }
       if (hasSession) {
-        return `${baseClasses} bg-teal-100 text-teal-800 font-medium`
+        return `${baseClasses} bg-teal-100 text-teal-800 font-medium hover:bg-teal-200`
       }
       
       return `${baseClasses} ${
@@ -43,6 +44,12 @@ export default function CalendarView({ sessions, darkMode }: CalendarViewProps) 
           ? 'text-gray-300 hover:bg-gray-700' 
           : 'text-gray-700 hover:bg-gray-100'
       }`
+    }
+
+    const handleDayClick = (day: Date) => {
+      if (onDateClick) {
+        onDateClick(day)
+      }
     }
 
     return (
@@ -77,10 +84,11 @@ export default function CalendarView({ sessions, darkMode }: CalendarViewProps) 
             <div
               key={day.toISOString()}
               className={getDayClasses(day)}
+              onClick={() => handleDayClick(day)}
               title={
                 sessionDates.some(date => isSameDay(date, day))
-                  ? `Session on ${format(day, 'MMM do')}`
-                  : undefined
+                  ? `Session on ${format(day, 'MMM do')} - Click to create another`
+                  : `Click to create session on ${format(day, 'MMM do')}`
               }
             >
               {format(day, 'd')}
@@ -112,6 +120,12 @@ export default function CalendarView({ sessions, darkMode }: CalendarViewProps) 
           <div className={`w-4 h-4 rounded ${darkMode ? 'bg-gray-600' : 'bg-gray-200'}`}></div>
           <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             Today
+          </span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 border-2 border-gray-400 border-dashed rounded"></div>
+          <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            Click to create session
           </span>
         </div>
       </div>

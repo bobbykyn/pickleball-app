@@ -7,6 +7,7 @@ import SessionCard from '../components/SessionCard'
 import AuthModal from '../components/AuthModal'
 import CreateSessionModal from '@/components/CreateSessionModal'
 import EditSessionModal from '@/components/EditSessionModal'
+import ProfileModal from '@/components/ProfileModal'
 import CalendarView from '@/components/CalendarView'
 import { Session } from '@/types'
 import Sidebar from '../components/Sidebar'
@@ -14,14 +15,36 @@ import { Settings } from 'lucide-react'
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null)
+  const [userProfile, setUserProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [sessions, setSessions] = useState<Session[]>([])
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showProfileModal, setShowProfileModal] = useState(false)
   const [showSidebar, setShowSidebar] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingSession, setEditingSession] = useState<Session | null>(null)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+
+  // Load user profile
+  const loadUserProfile = async () => {
+    if (!user) return
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('name, phone')
+        .eq('id', user.id)
+        .single()
+
+      if (!error && data) {
+        setUserProfile(data)
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error)
+    }
+  }
 
   // Load sessions from database
   const loadSessions = async () => {
@@ -45,12 +68,14 @@ export default function Home() {
     }
   }
 
-  // Dark mode effect
+  // Dark mode effect - DEFAULT TO DARK MODE
   useEffect(() => {
-    const savedDarkMode = localStorage.getItem('darkMode') === 'true'
-    setDarkMode(savedDarkMode)
+    const savedDarkMode = localStorage.getItem('darkMode')
+    // Default to dark mode if no preference saved
+    const isDarkMode = savedDarkMode === null ? true : savedDarkMode === 'true'
+    setDarkMode(isDarkMode)
     
-    if (savedDarkMode) {
+    if (isDarkMode) {
       document.documentElement.classList.add('dark')
       document.body.style.backgroundColor = '#111827'
       document.body.style.color = '#f9fafb'
@@ -92,6 +117,7 @@ export default function Home() {
   useEffect(() => {
     if (user) {
       loadSessions()
+      loadUserProfile()
     }
   }, [user])
 
@@ -100,7 +126,17 @@ export default function Home() {
   }
 
   const handleSessionCreated = () => {
-    loadSessions() // Refresh the sessions list
+    loadSessions()
+    setSelectedDate(null)
+  }
+
+  const handleProfileUpdated = () => {
+    loadUserProfile()
+  }
+
+  const handleCalendarDateClick = (date: Date) => {
+    setSelectedDate(date)
+    setShowCreateModal(true)
   }
 
   const handleEditSession = (session: Session) => {
@@ -109,7 +145,7 @@ export default function Home() {
   }
   
   const handleSessionUpdated = () => {
-    loadSessions() // Refresh the sessions list
+    loadSessions()
     setShowEditModal(false)
     setEditingSession(null)
   }
@@ -233,54 +269,69 @@ export default function Home() {
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50'}`}>
       {/* Header */}
       <div className={`shadow-sm border-b ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
-        <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">🏓 雞仔 Pickle</h1>
-            <p className={`mt-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Let's Pickle Time!!</p>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            {user ? (
-              <div className="flex items-center space-x-4">
-                <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Welcome, {user.email}</span>
-                
+        <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+            <div>
+              <h1 className={`text-2xl md:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>🏓 雞仔 Pickle</h1>
+              <p className={`mt-1 text-sm md:text-base ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Let's Pickle Time!!</p>
+              {/* Show username on mobile below subtitle */}
+              {user && (
+                <p className={`mt-1 text-sm md:hidden ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Welcome, {userProfile?.name || user.email}
+                </p>
+              )}
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              {user ? (
+                <div className="flex items-center space-x-4">
+                  {/* Hide username on desktop (shown inline) */}
+                  <span className={`hidden md:block ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Welcome, {userProfile?.name || user.email}
+                  </span>
+                  
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="bg-teal-700 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg hover:bg-teal-800 text-sm md:text-base"
+                  >
+                    Create Session
+                  </button>
+                </div>
+              ) : (
                 <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="bg-teal-700 text-white px-4 py-2 rounded-lg hover:bg-teal-800"
+                  onClick={() => setShowAuthModal(true)}
+                  className="bg-teal-700 text-white px-4 py-1.5 md:px-6 md:py-2 rounded-lg hover:bg-teal-800 font-medium text-sm md:text-base"
                 >
-                  Create Session
+                  Login / Sign Up
                 </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowAuthModal(true)}
-                className="bg-teal-700 text-white px-6 py-2 rounded-lg hover:bg-teal-800 font-medium"
-              >
-                Login / Sign Up
-              </button>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
       {user ? (
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex gap-8">
-            {/* Left Column - Calendar */}
-            <div className="w-80 flex-shrink-0">
+        <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+          <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
+            {/* Left Column - Calendar - Hidden on mobile, shown on desktop */}
+            <div className="hidden lg:block w-80 flex-shrink-0">
               <div className={`rounded-lg shadow-lg p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                <CalendarView sessions={sessions} darkMode={darkMode} />
+                <CalendarView 
+                  sessions={sessions} 
+                  darkMode={darkMode}
+                  onDateClick={handleCalendarDateClick}
+                />
               </div>
             </div>
 
-            {/* Right Column - Sessions */}
+            {/* Right Column - Sessions - Full width on mobile */}
             <div className="flex-1">
-              <h2 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              <h2 className={`text-xl md:text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                 Upcoming Games
               </h2>
               {sessions.length > 0 ? (
-                <div className="space-y-6">
+                <div className="space-y-4 md:space-y-6">
                   {sessions.map((session) => (
                     <SessionCard 
                       key={session.id} 
@@ -295,7 +346,7 @@ export default function Home() {
                   ))}
                 </div>
               ) : (
-                <div className={`text-center py-12 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                <div className={`text-center py-8 md:py-12 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
                   <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                     No sessions yet! Use the Create Session button above.
                   </p>
@@ -335,8 +386,12 @@ export default function Home() {
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       <CreateSessionModal 
         isOpen={showCreateModal} 
-        onClose={() => setShowCreateModal(false)}
+        onClose={() => {
+          setShowCreateModal(false)
+          setSelectedDate(null)
+        }}
         onSessionCreated={handleSessionCreated}
+        selectedDate={selectedDate}
       />
       <EditSessionModal
         isOpen={showEditModal}
@@ -347,6 +402,12 @@ export default function Home() {
         onSessionUpdated={handleSessionUpdated}
         session={editingSession}
       />
+      <ProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        user={user}
+        onProfileUpdated={handleProfileUpdated}
+      />
       <Sidebar 
         isOpen={showSidebar} 
         onClose={() => setShowSidebar(false)} 
@@ -354,6 +415,10 @@ export default function Home() {
         darkMode={darkMode}
         onToggleDarkMode={toggleDarkMode}
         onSignOut={handleSignOut}
+        onOpenProfile={() => {
+          setShowSidebar(false)
+          setShowProfileModal(true)
+        }}
       />
     </div>
   )

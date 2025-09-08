@@ -11,9 +11,10 @@ interface SidebarProps {
   darkMode: boolean
   onToggleDarkMode: () => void
   onSignOut: () => void
+  onOpenProfile: () => void
 }
 
-export default function Sidebar({ isOpen, onClose, user, darkMode, onToggleDarkMode, onSignOut }: SidebarProps) {
+export default function Sidebar({ isOpen, onClose, user, darkMode, onToggleDarkMode, onSignOut, onOpenProfile }: SidebarProps) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -103,7 +104,7 @@ export default function Sidebar({ isOpen, onClose, user, darkMode, onToggleDarkM
                 <UserIcon className="w-5 h-5 text-gray-600" />
                 <span className="font-medium text-gray-900">Profile Settings</span>
               </div>
-              <button className="text-teal-700 text-sm font-medium hover:text-teal-800">
+              <button className="text-teal-700 text-sm font-medium hover:text-teal-800" onClick={onOpenProfile}>
                 Edit
               </button>
             </div>
@@ -130,4 +131,4 @@ export default function Sidebar({ isOpen, onClose, user, darkMode, onToggleDarkM
       </div>
     </div>
   )
-}
+}          

@@ -1,6 +1,5 @@
-'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { X, Calendar, MapPin, Users, FileText, Clock } from 'lucide-react'
 
@@ -8,9 +7,10 @@ interface CreateSessionModalProps {
   isOpen: boolean
   onClose: () => void
   onSessionCreated: () => void
+  selectedDate?: Date | null
 }
 
-export default function CreateSessionModal({ isOpen, onClose, onSessionCreated }: CreateSessionModalProps) {
+export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, selectedDate }: CreateSessionModalProps) {
   const [customLocation, setCustomLocation] = useState('')
   
   // Smart default date/time
@@ -51,6 +51,15 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated }
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   
+  // Update date when selectedDate prop changes
+  useEffect(() => {
+    if (isOpen && selectedDate) {
+      const selected = new Date(selectedDate)
+      selected.setHours(18, 0, 0, 0) // Default to 6 PM
+      setDateTime(selected.toISOString().slice(0, 16))
+    }
+  }, [isOpen, selectedDate])
+
   // Cost calculation logic
   const calculateCost = (dateTime: string, durationHours: number) => {
     if (!dateTime) return { totalCost: 0, isPeak: false }
