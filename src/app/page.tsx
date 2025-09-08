@@ -228,12 +228,6 @@ export default function Home() {
       </button>
       
       <button
-        onClick={() => setShowCreateModal(true)}
-        className="bg-teal-700 text-white px-4 py-2 rounded-lg hover:bg-teal-800"
-      >
-        Create Session
-      </button>
-      <button
         onClick={handleSignOut}
         className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
       >
