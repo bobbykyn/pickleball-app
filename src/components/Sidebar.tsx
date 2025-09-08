@@ -10,6 +10,7 @@ interface SidebarProps {
     user: User | null
     darkMode: boolean
     onToggleDarkMode: () => void
+    onSignOut: () => void
   }
 
 export default function Sidebar({ isOpen, onClose, user }: SidebarProps) {

@@ -101,28 +101,30 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
         </div>
       </div>
 
-      {/* Cost Information */}
-      <div className={`flex items-center justify-between rounded-lg p-3 mt-2 ${
-        darkMode ? 'bg-gray-700' : 'bg-gray-50'
-      }`}>
-        <div className="flex items-center space-x-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-teal-700">
-              ${costPerPerson.toFixed(2)}
+      {/* Cost Information - Only show for Megabox locations */}
+      {session.location.toLowerCase().includes('megabox') && (
+        <div className={`flex items-center justify-between rounded-lg p-3 mt-2 ${
+          darkMode ? 'bg-gray-700' : 'bg-gray-50'
+        }`}>
+          <div className="flex items-center space-x-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-teal-700">
+                ${costPerPerson.toFixed(2)}
+              </div>
+              <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>per person</div>
             </div>
-            <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>per person</div>
+            <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              <div>{durationHours}h • {isPeakTime ? 'Peak' : 'Off-peak'} rate</div>
+              <div className="text-xs">Total: ${totalCost} ÷ {attendeeCount} {attendeeCount === 1 ? 'person' : 'people'}</div>
+            </div>
           </div>
-          <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            <div>{durationHours}h • {isPeakTime ? 'Peak' : 'Off-peak'} rate</div>
-            <div className="text-xs">Total: ${totalCost} ÷ {attendeeCount} {attendeeCount === 1 ? 'person' : 'people'}</div>
-          </div>
+          {attendeeCount > 1 && (
+            <div className="text-teal-700 text-sm font-bold">
+              OJ!!
+            </div>
+          )}
         </div>
-        {attendeeCount > 1 && (
-          <div className="text-teal-700 text-sm font-bold">
-            OJ!!
-          </div>
-        )}
-      </div>
+      )}
       
       {/* Notes */}
       {session.notes && (

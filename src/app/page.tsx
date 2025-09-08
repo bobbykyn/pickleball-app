@@ -6,7 +6,8 @@ import { User } from '@supabase/supabase-js'
 import SessionCard from '../components/SessionCard'
 import AuthModal from '../components/AuthModal'
 import CreateSessionModal from '@/components/CreateSessionModal'
-import CalendarView from '../components/CalendarView'
+import EditSessionModal from '@/components/EditSessionModal'
+import CalendarView from '@/components/CalendarView'
 import { Session } from '@/types'
 import Sidebar from '../components/Sidebar'
 import { Settings, LogOut } from 'lucide-react'
@@ -19,6 +20,8 @@ export default function Home() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showSidebar, setShowSidebar] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+const [editingSession, setEditingSession] = useState<Session | null>(null)
 
   // Load sessions from database
   const loadSessions = async () => {
@@ -98,6 +101,17 @@ export default function Home() {
 
   const handleSessionCreated = () => {
     loadSessions() // Refresh the sessions list
+  }
+
+  const handleEditSession = (session: Session) => {
+    setEditingSession(session)
+    setShowEditModal(true)
+  }
+  
+  const handleSessionUpdated = () => {
+    loadSessions() // Refresh the sessions list
+    setShowEditModal(false)
+    setEditingSession(null)
   }
   
   const handleDeleteSession = async (sessionId: string) => {
@@ -356,12 +370,19 @@ export default function Home() {
         onClose={() => setShowCreateModal(false)}
         onSessionCreated={handleSessionCreated}
       />
+      <EditSessionModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSessionUpdated={handleSessionUpdated}
+        session={editingSession}
+      />
       <Sidebar 
         isOpen={showSidebar} 
         onClose={() => setShowSidebar(false)} 
         user={user} 
         darkMode={darkMode}
         onToggleDarkMode={toggleDarkMode}
+        onSignOut={handleSignOut}
       />
     </div>
   )
