@@ -93,11 +93,14 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated }
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('You must be logged in to create a session')
 
+      // Simply append seconds and timezone to make it a valid ISO string
+      const isoDateTime = dateTime + ':00+08:00' // Hong Kong timezone (UTC+8)
+      
       const { data, error } = await supabase
         .from('sessions')
         .insert({
           title,
-          date_time: dateTime, // NO timezone conversion - keep it simple
+          date_time: isoDateTime,
           location: location === 'Custom Location...' ? customLocation : location,
           max_players: maxPlayers,
           duration_hours: duration,
@@ -186,7 +189,7 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated }
               type="datetime-local"
               value={dateTime}
               onChange={(e) => setDateTime(e.target.value)}
-              className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-1 focus:ring-teal-500"
+              className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
               required
             />
           </div>
@@ -195,12 +198,6 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated }
             <label className="block text-sm font-medium text-gray-700 mb-1">
               <MapPin className="w-4 h-4 inline mr-1" />
               Location
-              <span 
-                className="ml-1 text-xs text-gray-500 cursor-help" 
-                title="Select any location below, enter your own, or leave default: Megabox"
-              >
-                ℹ️
-              </span>
             </label>
 
             {location === 'Custom Location...' ? (
@@ -275,12 +272,14 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated }
             />
           </div>
 
-          {/* Cost Preview */}
-          <div className="bg-gray-50 p-3 rounded-lg">
-            <div className="text-sm text-gray-600">
-              <strong>Cost Preview:</strong> ${totalCost} total ({isPeak ? 'Peak' : 'Off-peak'} rate)
+          {/* Cost Preview - Only for Megabox */}
+          {location.toLowerCase().includes('megabox') && (
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="text-sm text-gray-600">
+                <strong>Cost Preview:</strong> ${totalCost} total ({isPeak ? 'Peak' : 'Off-peak'} rate)
+              </div>
             </div>
-          </div>
+          )}
 
           <button
             type="submit"

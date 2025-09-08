@@ -36,10 +36,16 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
     if (session && isOpen) {
       setTitle(session.title)
       
-      // Convert stored UTC time back to local datetime-local format
+      // Parse the stored date and format it for datetime-local input
       const sessionDate = new Date(session.date_time)
-      const localDateTime = new Date(sessionDate.getTime() - (sessionDate.getTimezoneOffset() * 60000))
-      setDateTime(localDateTime.toISOString().slice(0, 16))
+      // Format as YYYY-MM-DDTHH:mm for the input
+      const year = sessionDate.getFullYear()
+      const month = String(sessionDate.getMonth() + 1).padStart(2, '0')
+      const day = String(sessionDate.getDate()).padStart(2, '0')
+      const hours = String(sessionDate.getHours()).padStart(2, '0')
+      const minutes = String(sessionDate.getMinutes()).padStart(2, '0')
+      const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`
+      setDateTime(localDateTime)
       
       setLocation(session.location)
       setMaxPlayers(session.max_players)
@@ -91,12 +97,14 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
         throw new Error('You can only edit sessions you created')
       }
 
-      // NO timezone conversion - keep it simple like create session
+      // Simply append seconds and timezone to make it a valid ISO string
+      const isoDateTime = dateTime + ':00+08:00' // Hong Kong timezone (UTC+8)
+      
       const { error } = await supabase
         .from('sessions')
         .update({
           title,
-          date_time: dateTime,
+          date_time: isoDateTime,
           location: location === 'Custom Location...' ? customLocation : location,
           max_players: maxPlayers,
           duration_hours: duration,
