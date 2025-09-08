@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import SessionCard from '../components/SessionCard'
 import AuthModal from '../components/AuthModal'
-import CreateSessionModal from '../components/CreateSessionModal'
+import CreateSessionModal from '@/components/CreateSessionModal'
 import { Session } from '@/types'
 
 export default function Home() {
