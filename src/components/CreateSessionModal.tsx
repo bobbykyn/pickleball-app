@@ -97,13 +97,13 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated }
         .from('sessions')
         .insert({
           title,
-          date_time: dateTime,
+          date_time: dateTime, // NO timezone conversion - keep it simple
           location: location === 'Custom Location...' ? customLocation : location,
           max_players: maxPlayers,
           duration_hours: duration,
           total_cost: totalCost,
           is_peak_time: isPeak,
-          cost_per_person: totalCost, // Will be updated when people RSVP
+          cost_per_person: totalCost,
           notes: notes || null,
           created_by: user.id
         })

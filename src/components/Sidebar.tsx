@@ -1,32 +1,24 @@
 'use client'
 
 import { User } from '@supabase/supabase-js'
-import { X, User as UserIcon, Bell, Moon, Sun, Calendar } from 'lucide-react'
+import { X, User as UserIcon, Bell, Moon, Sun } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 interface SidebarProps {
-    isOpen: boolean
-    onClose: () => void
-    user: User | null
-    darkMode: boolean
-    onToggleDarkMode: () => void
-    onSignOut: () => void
-  }
+  isOpen: boolean
+  onClose: () => void
+  user: User | null
+  darkMode: boolean
+  onToggleDarkMode: () => void
+  onSignOut: () => void
+}
 
-export default function Sidebar({ isOpen, onClose, user }: SidebarProps) {
-  const [darkMode, setDarkMode] = useState(false)
+export default function Sidebar({ isOpen, onClose, user, darkMode, onToggleDarkMode, onSignOut }: SidebarProps) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    const savedDarkMode = localStorage.getItem('darkMode') === 'true'
-    setDarkMode(savedDarkMode)
   }, [])
-
-  const handleToggleDarkMode = () => {
-    if (!mounted) return
-    
-  }
 
   if (!mounted) return null
 
@@ -60,13 +52,14 @@ export default function Sidebar({ isOpen, onClose, user }: SidebarProps) {
         )}
 
         <div className="space-y-4">
+          {/* Dark Mode Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center space-x-3">
               {darkMode ? <Moon className="w-5 h-5 text-gray-600" /> : <Sun className="w-5 h-5 text-gray-600" />}
               <span className="font-medium text-gray-900">Dark Mode</span>
             </div>
             <button
-              onClick={handleToggleDarkMode}
+              onClick={onToggleDarkMode}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 darkMode ? 'bg-teal-600' : 'bg-gray-300'
               }`}
@@ -79,6 +72,7 @@ export default function Sidebar({ isOpen, onClose, user }: SidebarProps) {
             </button>
           </div>
 
+          {/* Notifications */}
           <div className="p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center space-x-3 mb-3">
               <Bell className="w-5 h-5 text-gray-600" />
@@ -93,21 +87,42 @@ export default function Sidebar({ isOpen, onClose, user }: SidebarProps) {
                 <input type="checkbox" className="rounded" defaultChecked />
                 <span className="text-sm text-gray-700">RSVP updates</span>
               </label>
+              <label className="flex items-center space-x-2">
+                <input type="checkbox" className="rounded" />
+                <span className="text-sm text-gray-700">WhatsApp (coming soon)</span>
+              </label>
             </div>
           </div>
 
+          {/* Profile Settings */}
           <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center space-x-3">
-              <Calendar className="w-5 h-5 text-gray-600" />
-              <span className="font-medium text-gray-900">Calendar View</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <UserIcon className="w-5 h-5 text-gray-600" />
+                <span className="font-medium text-gray-900">Profile Settings</span>
+              </div>
+              <button className="text-teal-700 text-sm font-medium hover:text-teal-800">
+                Edit
+              </button>
             </div>
-            <p className="text-sm text-gray-600 mt-2 ml-8">Coming soon</p>
+            <p className="text-sm text-gray-600 mt-2 ml-8">Update name, phone, preferences</p>
           </div>
+        </div>
+
+        {/* Sign Out Button at Bottom */}
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <button
+            onClick={onSignOut}
+            className="w-full flex items-center justify-center space-x-2 p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            <span>Sign Out</span>
+          </button>
         </div>
 
         <div className="mt-8 pt-6 border-t border-gray-200">
           <p className="text-xs text-gray-500 text-center">
-            Court Booker v1.0
+            Court Booker v1.0<br />
+            Made for the pickleball crew 🏓
           </p>
         </div>
       </div>
