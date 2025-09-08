@@ -31,8 +31,10 @@ export default function Sidebar({ isOpen, onClose, user }: SidebarProps) {
     // Apply dark mode to document
     if (newDarkMode) {
       document.documentElement.classList.add('dark')
+      document.body.classList.add('bg-gray-900', 'text-white')
     } else {
       document.documentElement.classList.remove('dark')
+      document.body.classList.remove('bg-gray-900', 'text-white')
     }
   }
 

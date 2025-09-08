@@ -72,22 +72,25 @@ export default function Home() {
   
   const handleDeleteSession = async (sessionId: string) => {
     try {
-      console.log('Attempting to delete session:', sessionId) // Debug log
+      console.log('🔥 DELETE ATTEMPT:', sessionId)
+      console.log('🔥 Current user email:', user?.email)
+      console.log('🔥 Is admin?', user?.email === 'bobbykyn@gmail.com')
+      
       const { error } = await supabase
         .from('sessions')
         .delete()
         .eq('id', sessionId)
   
       if (error) {
-        console.error('Supabase error:', error) // Debug log
-        throw error
+        console.error('🔥 Supabase error:', error)
+        alert(`Delete failed: ${error.message}`)
+        return
       }
       
-      console.log('Session deleted successfully') // Debug log
-      // Refresh the sessions list
+      console.log('🔥 Delete successful!')
       loadSessions()
     } catch (error) {
-      console.error('Error deleting session:', error)
+      console.error('🔥 Catch error:', error)
       alert('Failed to delete session. Please try again.')
     }
   }
