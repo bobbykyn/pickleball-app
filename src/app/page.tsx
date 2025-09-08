@@ -7,6 +7,8 @@ import SessionCard from '../components/SessionCard'
 import AuthModal from '../components/AuthModal'
 import CreateSessionModal from '@/components/CreateSessionModal'
 import { Session } from '@/types'
+import Sidebar from '../components/Sidebar'
+import { Settings } from 'lucide-react'
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null)
@@ -14,6 +16,7 @@ export default function Home() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showSidebar, setShowSidebar] = useState(false)
 
   // Load sessions from database
   const loadSessions = async () => {
@@ -91,7 +94,6 @@ export default function Home() {
   const handleRSVP = async (sessionId: string, status: 'yes' | 'maybe' | 'no') => {
     if (!user) return
     
-      try {
         // Check max players limit for 'yes' RSVPs
         if (status === 'yes') {
           const session = sessions.find(s => s.id === sessionId)
@@ -102,7 +104,6 @@ export default function Home() {
             return
           }
         }
-      }
   
     try {
       // Check if user already has an RSVP
@@ -196,22 +197,28 @@ export default function Home() {
           </div>
           
           <div className="flex items-center space-x-4">
-            {user ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-700">Welcome, {user.email}!</span>
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="bg-teal-700 text-white px-4 py-2 rounded-lg hover:bg-teal-800"
-                >
-                  Create Session
-                </button>
-                <button
-                  onClick={handleSignOut}
-                  className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
-                >
-                  Sign Out
-                </button>
-              </div>
+  {user ? (
+    <div className="flex items-center space-x-4">
+      <span className="text-gray-700">Welcome, {user.email}!</span>
+      <button
+        onClick={() => setShowSidebar(true)}
+        className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+      >
+        <Settings className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => setShowCreateModal(true)}
+        className="bg-teal-700 text-white px-4 py-2 rounded-lg hover:bg-teal-800"
+      >
+        Create Session
+      </button>
+      <button
+        onClick={handleSignOut}
+        className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+      >
+        Sign Out
+      </button>
+    </div>
             ) : (
               <button
                 onClick={() => setShowAuthModal(true)}
@@ -274,6 +281,7 @@ export default function Home() {
         onClose={() => setShowCreateModal(false)}
         onSessionCreated={handleSessionCreated}
       />
+      <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} user={user} />
     </div>
   )
 }

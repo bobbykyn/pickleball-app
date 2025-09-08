@@ -137,13 +137,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           >
             {loading ? 'Loading...' : (isLogin ? 'Login' : 'Sign Up')}
           </button>
-          <button
-  type="submit"
-  disabled={loading}
-  className="w-full bg-teal-700 text-white p-3 rounded-lg font-medium hover:bg-teal-800 disabled:opacity-50 transition-colors"
->
-  {loading ? 'Loading...' : (isLogin ? 'Login' : 'Sign Up')}
-</button>
 
 <div className="relative my-4">
   <div className="absolute inset-0 flex items-center">

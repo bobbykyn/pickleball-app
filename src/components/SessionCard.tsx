@@ -12,7 +12,10 @@ interface SessionCardProps {
 }
 
 export default function SessionCard({ session, currentUserId, currentUserEmail, onDelete, onRSVP }: SessionCardProps) {
-    const yesRSVPs = session.rsvps?.filter(rsvp => rsvp.status === 'yes') || []
+  const isCreator = currentUserId === session.created_by
+const isAdmin = currentUserEmail === 'bobbykyn@gmail.com'
+const canDelete = isCreator || isAdmin  
+  const yesRSVPs = session.rsvps?.filter(rsvp => rsvp.status === 'yes') || []
     const maybeRSVPs = session.rsvps?.filter(rsvp => rsvp.status === 'maybe') || []
     
     const handleDelete = async () => {
@@ -23,10 +26,6 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
         onDelete(session.id)
       }
     }
-    
-    const isCreator = currentUserId === session.created_by
-const isAdmin = currentUserEmail === 'bobbykyn@gmail.com'
-const canDelete = isCreator || isAdmin
     
     // NEW: Add RSVP logic
     const currentUserRSVP = session.rsvps?.find(rsvp => rsvp.user_id === currentUserId)
@@ -105,7 +104,7 @@ const canDelete = isCreator || isAdmin
     </div>
   </div>
   {attendeeCount > 1 && (
-    <div className="text-green-600 text-sm font-bold font-medium">
+    <div className="text-teal-700 text-sm font-bold">
       OJ!!
     </div>
   )}
