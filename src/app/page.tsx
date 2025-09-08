@@ -199,15 +199,31 @@ export default function Home() {
           <div className="flex items-center space-x-4">
   {user ? (
     <div className="flex items-center space-x-4">
-      <span className="text-gray-700">Welcome, {user.email}!</span>
-      {/*
+      <span className="text-gray-700">Welcome, {user.email}</span>
+      
+      
+      {/* ADD THIS TEST BUTTON HERE: */}
+      <button 
+        onClick={() => fetch('/api/test-email', { method: 'POST' }).then(r => r.json()).then(console.log)}
+        className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 text-sm"
+      >
+        Test Email
+      </button>
+      
+      <button
+        onClick={() => setShowCreateModal(true)}
+        className="bg-teal-700 text-white px-4 py-2 rounded-lg hover:bg-teal-800"
+      >
+        Create Session
+      </button>
+
       <button
         onClick={() => setShowSidebar(true)}
         className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
       >
         <Settings className="w-4 h-4" />
       </button>
-      */}
+      
       <button
         onClick={() => setShowCreateModal(true)}
         className="bg-teal-700 text-white px-4 py-2 rounded-lg hover:bg-teal-800"
@@ -283,7 +299,7 @@ export default function Home() {
         onClose={() => setShowCreateModal(false)}
         onSessionCreated={handleSessionCreated}
       />
-      {/* <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} user={user} /> */}
+       <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} user={user} /> 
     </div>
   )
 }
