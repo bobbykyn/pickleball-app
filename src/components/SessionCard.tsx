@@ -9,9 +9,10 @@ interface SessionCardProps {
   currentUserEmail?: string
   onDelete?: (sessionId: string) => void
   onRSVP?: (sessionId: string, status: 'yes' | 'maybe' | 'no') => void
+  darkMode?: boolean
 }
 
-export default function SessionCard({ session, currentUserId, currentUserEmail, onDelete, onRSVP }: SessionCardProps) {
+export default function SessionCard({ session, currentUserId, currentUserEmail, onDelete, onRSVP, darkMode = false }: SessionCardProps) {
   const isCreator = currentUserId === session.created_by
   const isAdmin = currentUserEmail === 'bobbykyn@gmail.com'
   const canDelete = isCreator || isAdmin  
@@ -43,21 +44,33 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
   const durationHours = session.duration_hours || 1 
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 border border-gray-100">
+    <div className={`rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 border ${
+      darkMode 
+        ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' 
+        : 'bg-white border-gray-100'
+    }`}>
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
-        <h3 className="text-xl font-bold text-gray-900">
+        <h3 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
           {session.title}
         </h3>
         <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-1 bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm font-medium">
+          <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
+            darkMode 
+              ? 'bg-teal-900 text-teal-200' 
+              : 'bg-teal-100 text-teal-800'
+          }`}>
             <Users className="w-4 h-4" />
             <span>{yesRSVPs.length}/{session.max_players}</span>
           </div>
           {canDelete && (
             <button
               onClick={handleDelete}
-              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              className={`p-2 rounded-lg transition-colors ${
+                darkMode
+                  ? 'text-red-400 hover:bg-red-900/20'
+                  : 'text-red-600 hover:bg-red-50'
+              }`}
               title={isAdmin ? "Delete session (Admin)" : "Delete session"}
             >
               <Trash2 className="w-4 h-4" />
@@ -68,36 +81,38 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
       
       {/* Details */}
       <div className="space-y-3 mb-6">
-        <div className="flex items-center text-gray-600">
+        <div className={`flex items-center ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
           <Calendar className="w-5 h-5 mr-3 text-blue-500" />
           <span className="font-medium">
             {format(new Date(session.date_time), 'EEEE, MMMM do')}
           </span>
         </div>
         
-        <div className="flex items-center text-gray-600">
+        <div className={`flex items-center ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
           <Clock className="w-5 h-5 mr-3 text-orange-500" />
           <span className="font-medium">
             {format(new Date(session.date_time), 'h:mm a')}
           </span>
         </div>
         
-        <div className="flex items-center text-gray-600">
+        <div className={`flex items-center ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
           <MapPin className="w-5 h-5 mr-3 text-red-500" />
           <span className="font-medium">{session.location}</span>
         </div>
       </div>
 
       {/* Cost Information */}
-      <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3 mt-2">
+      <div className={`flex items-center justify-between rounded-lg p-3 mt-2 ${
+        darkMode ? 'bg-gray-700' : 'bg-gray-50'
+      }`}>
         <div className="flex items-center space-x-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-teal-700">
               ${costPerPerson.toFixed(2)}
             </div>
-            <div className="text-xs text-gray-500">per person</div>
+            <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>per person</div>
           </div>
-          <div className="text-sm text-gray-600">
+          <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             <div>{durationHours}h • {isPeakTime ? 'Peak' : 'Off-peak'} rate</div>
             <div className="text-xs">Total: ${totalCost} ÷ {attendeeCount} {attendeeCount === 1 ? 'person' : 'people'}</div>
           </div>
@@ -111,15 +126,19 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
       
       {/* Notes */}
       {session.notes && (
-        <div className="mb-6 p-3 bg-gray-50 rounded-lg">
-          <p className="text-gray-700 text-sm">{session.notes}</p>
+        <div className={`mb-6 p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+          <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{session.notes}</p>
         </div>
       )}
       
       {/* RSVP Status */}
       <div className="mb-6">
-        <div className="flex items-center space-x-1 bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm font-medium mb-3">
-          <span>Who&apos;s Playing:</span>
+        <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium mb-3 ${
+          darkMode 
+            ? 'bg-teal-900 text-teal-200' 
+            : 'bg-teal-100 text-teal-800'
+        }`}>
+          <span>Who's Playing:</span>
           {maybeRSVPs.length > 0 && (
             <span className="text-yellow-600">{maybeRSVPs.length} maybe</span>
           )}
@@ -127,7 +146,11 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
         {yesRSVPs.length > 0 ? (
           <div className="flex flex-wrap gap-4">
             {yesRSVPs.map((rsvp) => (
-              <div key={rsvp.id} className="flex items-center space-x-2 bg-teal-50 text-teal-800 px-3 py-2 rounded-full">
+              <div key={rsvp.id} className={`flex items-center space-x-2 px-3 py-2 rounded-full ${
+                darkMode 
+                  ? 'bg-teal-900 text-teal-200' 
+                  : 'bg-teal-50 text-teal-800'
+              }`}>
                 <UserAvatar profile={rsvp.profiles} size="sm" />
                 <span className="text-sm font-medium">
                   {rsvp.profiles?.name || 'Player'}
@@ -136,7 +159,9 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-sm">No one has joined yet - be the first!</p>
+          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            No one has joined yet - be the first!
+          </p>
         )}
       </div>
       
@@ -148,7 +173,9 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
             className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
               userRSVPStatus === 'yes' 
                 ? 'bg-teal-700 text-white' 
-                : 'bg-teal-100 text-teal-700 hover:bg-teal-200'
+                : darkMode
+                  ? 'bg-teal-800 text-teal-200 hover:bg-teal-700'
+                  : 'bg-teal-100 text-teal-700 hover:bg-teal-200'
             }`}
           >
             Join!
@@ -158,7 +185,9 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
             className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
               userRSVPStatus === 'maybe' 
                 ? 'bg-yellow-500 text-white' 
-                : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                : darkMode
+                  ? 'bg-yellow-800 text-yellow-200 hover:bg-yellow-700'
+                  : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
             }`}
           >
             Maybe
@@ -168,7 +197,9 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
             className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
               userRSVPStatus === 'no' 
                 ? 'bg-gray-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : darkMode
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             Next Time!
