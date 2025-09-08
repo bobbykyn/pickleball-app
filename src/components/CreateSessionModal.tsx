@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { X, Calendar, MapPin, Users, FileText, Clock } from 'lucide-react'
+import { sendSessionCreatedEmail } from '@/lib/email'
 
 interface CreateSessionModalProps {
   isOpen: boolean
@@ -80,7 +81,7 @@ const { totalCost, isPeak } = calculateCost(dateTime, duration)
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('You must be logged in to create a session')
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('sessions')
         .insert({
           title,
@@ -96,6 +97,26 @@ const { totalCost, isPeak } = calculateCost(dateTime, duration)
         })
 
       if (error) throw error
+
+// NEW: Send email notifications
+try {
+  const response = await fetch('/api/send-session-email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ sessionId: data[0]?.id }),
+  })
+  
+  if (!response.ok) {
+    console.error('Failed to send email notifications')
+  }
+} catch (emailError) {
+  console.error('Email notification error:', emailError)
+  // Don't fail the session creation if email fails
+}
+
+setMessage('Session created successfully!')
 
       setMessage('Session created successfully!')
       setTimeout(() => {
