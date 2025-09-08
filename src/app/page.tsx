@@ -10,7 +10,7 @@ import EditSessionModal from '@/components/EditSessionModal'
 import CalendarView from '@/components/CalendarView'
 import { Session } from '@/types'
 import Sidebar from '../components/Sidebar'
-import { Settings, LogOut } from 'lucide-react'
+import { Settings } from 'lucide-react'
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null)
@@ -21,7 +21,7 @@ export default function Home() {
   const [showSidebar, setShowSidebar] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-const [editingSession, setEditingSession] = useState<Session | null>(null)
+  const [editingSession, setEditingSession] = useState<Session | null>(null)
 
   // Load sessions from database
   const loadSessions = async () => {
@@ -33,7 +33,7 @@ const [editingSession, setEditingSession] = useState<Session | null>(null)
           profiles:created_by(name),
           rsvps(
             *,
-            profiles(name)
+            profiles(name, email)
           )
         `)
         .order('date_time', { ascending: true })
@@ -116,25 +116,20 @@ const [editingSession, setEditingSession] = useState<Session | null>(null)
   
   const handleDeleteSession = async (sessionId: string) => {
     try {
-      console.log('🔥 DELETE ATTEMPT:', sessionId)
-      console.log('🔥 Current user email:', user?.email)
-      console.log('🔥 Is admin?', user?.email === 'bobbykyn@gmail.com')
-      
       const { error } = await supabase
         .from('sessions')
         .delete()
         .eq('id', sessionId)
   
       if (error) {
-        console.error('🔥 Supabase error:', error)
+        console.error('Supabase error:', error)
         alert(`Delete failed: ${error.message}`)
         return
       }
       
-      console.log('🔥 Delete successful!')
       loadSessions()
     } catch (error) {
-      console.error('🔥 Catch error:', error)
+      console.error('Catch error:', error)
       alert('Failed to delete session. Please try again.')
     }
   }
@@ -274,47 +269,8 @@ const [editingSession, setEditingSession] = useState<Session | null>(null)
           <div className="flex gap-8">
             {/* Left Column - Calendar */}
             <div className="w-80 flex-shrink-0">
-              <div className={`rounded-lg shadow-lg p-6 relative ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+              <div className={`rounded-lg shadow-lg p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
                 <CalendarView sessions={sessions} darkMode={darkMode} />
-                
-                {/* Bottom buttons */}
-                <div className="absolute bottom-4 left-4 space-y-2">
-                  <button
-                    onClick={toggleDarkMode}
-                    className={`p-2 rounded-lg transition-colors ${
-                      darkMode 
-                        ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-700' 
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                    }`}
-                    title="Toggle dark mode"
-                  >
-                    {darkMode ? '🌙' : '☀️'}
-                  </button>
-                  
-                  <button
-                    onClick={() => setShowSidebar(true)}
-                    className={`p-2 rounded-lg transition-colors ${
-                      darkMode 
-                        ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-700' 
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                    }`}
-                    title="Settings"
-                  >
-                    <Settings className="w-4 h-4" />
-                  </button>
-                  
-                  <button
-                    onClick={handleSignOut}
-                    className={`p-2 rounded-lg transition-colors ${
-                      darkMode 
-                        ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-700' 
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                    }`}
-                    title="Sign out"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </button>
-                </div>
               </div>
             </div>
 
@@ -332,6 +288,7 @@ const [editingSession, setEditingSession] = useState<Session | null>(null)
                       currentUserId={user?.id}
                       currentUserEmail={user?.email}
                       onDelete={handleDeleteSession}
+                      onEdit={handleEditSession}
                       onRSVP={handleRSVP}
                       darkMode={darkMode}
                     />
@@ -364,6 +321,17 @@ const [editingSession, setEditingSession] = useState<Session | null>(null)
         </div>
       )}
 
+      {/* Settings Button - Fixed at bottom left */}
+      {user && (
+        <button
+          onClick={() => setShowSidebar(!showSidebar)}
+          className="fixed bottom-6 left-6 bg-teal-700 text-white p-4 rounded-full shadow-lg hover:bg-teal-800 transition-colors z-30"
+          title="Settings"
+        >
+          <Settings className="w-6 h-6" />
+        </button>
+      )}
+
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       <CreateSessionModal 
         isOpen={showCreateModal} 
@@ -372,7 +340,10 @@ const [editingSession, setEditingSession] = useState<Session | null>(null)
       />
       <EditSessionModal
         isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
+        onClose={() => {
+          setShowEditModal(false)
+          setEditingSession(null)
+        }}
         onSessionUpdated={handleSessionUpdated}
         session={editingSession}
       />
