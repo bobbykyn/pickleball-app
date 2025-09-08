@@ -105,6 +105,8 @@ const { totalCost, isPeak } = calculateCost(dateTime, duration)
     notes: notes || null,
     created_by: user.id
         })
+        .select('id')
+        .single()
 
       if (error) throw error
 
@@ -115,7 +117,7 @@ try {
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ sessionId: data[0]?.id }),
+    body: JSON.stringify({ sessionId: data?.id }),
   })
   
   if (!response.ok) {

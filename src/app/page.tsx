@@ -200,12 +200,14 @@ export default function Home() {
   {user ? (
     <div className="flex items-center space-x-4">
       <span className="text-gray-700">Welcome, {user.email}!</span>
-    //  <button
-    //    onClick={() => setShowSidebar(true)}
-    //    className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
-    //  >
-    //</div>    <Settings className="w-4 h-4" />
-    //  </button>
+      {/*
+      <button
+        onClick={() => setShowSidebar(true)}
+        className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+      >
+        <Settings className="w-4 h-4" />
+      </button>
+      */}
       <button
         onClick={() => setShowCreateModal(true)}
         className="bg-teal-700 text-white px-4 py-2 rounded-lg hover:bg-teal-800"
@@ -281,7 +283,7 @@ export default function Home() {
         onClose={() => setShowCreateModal(false)}
         onSessionCreated={handleSessionCreated}
       />
-      // <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} user={user} />
+      {/* <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} user={user} /> */}
     </div>
   )
 }
