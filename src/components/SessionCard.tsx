@@ -1,6 +1,6 @@
 import { Session } from '@/types'
 import { format } from 'date-fns'
-import { Calendar, MapPin, Users, Clock, Trash2 } from 'lucide-react'
+import { Calendar, MapPin, Users, Clock, Trash2, Edit } from 'lucide-react'
 import UserAvatar from './UserAvatar'
 
 interface SessionCardProps {
@@ -8,14 +8,16 @@ interface SessionCardProps {
   currentUserId?: string
   currentUserEmail?: string
   onDelete?: (sessionId: string) => void
+  onEdit?: (session: Session) => void
   onRSVP?: (sessionId: string, status: 'yes' | 'maybe' | 'no') => void
   darkMode?: boolean
 }
 
-export default function SessionCard({ session, currentUserId, currentUserEmail, onDelete, onRSVP, darkMode = false }: SessionCardProps) {
+export default function SessionCard({ session, currentUserId, currentUserEmail, onDelete, onEdit, onRSVP, darkMode = false }: SessionCardProps) {
   const isCreator = currentUserId === session.created_by
   const isAdmin = currentUserEmail === 'bobbykyn@gmail.com'
-  const canDelete = isCreator || isAdmin  
+  const canDelete = isCreator || isAdmin
+  const canEdit = isCreator || isAdmin
   
   const yesRSVPs = session.rsvps?.filter(rsvp => rsvp.status === 'yes') || []
   const maybeRSVPs = session.rsvps?.filter(rsvp => rsvp.status === 'maybe') || []
@@ -63,19 +65,37 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
             <Users className="w-4 h-4" />
             <span>{yesRSVPs.length}/{session.max_players}</span>
           </div>
-          {canDelete && (
-            <button
-              onClick={handleDelete}
-              className={`p-2 rounded-lg transition-colors ${
-                darkMode
-                  ? 'text-red-400 hover:bg-red-900/20'
-                  : 'text-red-600 hover:bg-red-50'
-              }`}
-              title={isAdmin ? "Delete session (Admin)" : "Delete session"}
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          )}
+          
+          {/* Action buttons for creators/admin */}
+          <div className="flex items-center space-x-1">
+            {canEdit && onEdit && (
+              <button
+                onClick={() => onEdit(session)}
+                className={`p-2 rounded-lg transition-colors ${
+                  darkMode
+                    ? 'text-blue-400 hover:bg-blue-900/20'
+                    : 'text-blue-600 hover:bg-blue-50'
+                }`}
+                title={isAdmin ? "Edit session (Admin)" : "Edit session"}
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            )}
+            
+            {canDelete && (
+              <button
+                onClick={handleDelete}
+                className={`p-2 rounded-lg transition-colors ${
+                  darkMode
+                    ? 'text-red-400 hover:bg-red-900/20'
+                    : 'text-red-600 hover:bg-red-50'
+                }`}
+                title={isAdmin ? "Delete session (Admin)" : "Delete session"}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
       
@@ -133,9 +153,9 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
         </div>
       )}
       
-      {/* RSVP Status */}
-      <div className="mb-6">
-        <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium mb-3 ${
+      {/* RSVP Status - More spacing */}
+      <div className="my-8">
+        <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium mb-4 ${
           darkMode 
             ? 'bg-teal-900 text-teal-200' 
             : 'bg-teal-100 text-teal-800'

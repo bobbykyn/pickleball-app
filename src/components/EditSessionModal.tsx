@@ -91,15 +91,12 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
         throw new Error('You can only edit sessions you created')
       }
 
-      // Fix timezone issue - treat the input as HK local time
-      const selectedDate = new Date(dateTime)
-      const hongKongTime = new Date(selectedDate.getTime() - (selectedDate.getTimezoneOffset() * 60000))
-
+      // NO timezone conversion - keep it simple like create session
       const { error } = await supabase
         .from('sessions')
         .update({
           title,
-          date_time: hongKongTime.toISOString(),
+          date_time: dateTime,
           location: location === 'Custom Location...' ? customLocation : location,
           max_players: maxPlayers,
           duration_hours: duration,
