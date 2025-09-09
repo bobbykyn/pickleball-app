@@ -41,7 +41,7 @@ export default function MobileCalendarView({ sessions, darkMode, onDateClick, mo
             key={day.toISOString()}
             onClick={() => onDateClick?.(day)}
             className={`
-              h-6 flex items-center justify-center rounded text-xs
+              h-6 flex items-center justify-center rounded text-xs cursor-pointer
               ${today && hasSession ? 'bg-teal-600 text-white font-bold' : 
                 today ? `${darkMode ? 'bg-gray-600 text-white' : 'bg-gray-200'}` :
                 hasSession ? 'bg-teal-100 text-teal-800' :

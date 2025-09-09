@@ -13,9 +13,12 @@ import { Session } from '@/types'
 import Sidebar from '../components/Sidebar'
 import { Settings } from 'lucide-react'
 import { format, addMonths } from 'date-fns'
-import { useSwipeable } from 'react-swipeable'
-import MobileCalendarView from '@/components/MobileCalendarView'
+
+{/* import { useSwipeable } from 'react-swipeable'
+import MobileCalendarView from '@/components/MobileCalendarView' */}
+
 import HistoryModal from '@/components/HistoryModal'
+import MobileCalendarSwiper from '@/components/MobileCalendarSwiper'
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null)
@@ -32,6 +35,7 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [currentMonthOffset, setCurrentMonthOffset] = useState(0)
   const [showHistoryModal, setShowHistoryModal] = useState(false)
+  
 
   // Load user profile
   const loadUserProfile = async () => {
@@ -349,43 +353,22 @@ export default function Home() {
             {/* Right Column - Sessions - Full width on mobile */}
 <div className="flex-1">
   {/* Mobile Calendar Banner */}
-<div className="lg:hidden mb-4 -mx-4 px-4">
-  <div className={`rounded-lg p-3 ${darkMode ? 'bg-gray-800' : 'bg-white shadow'}`}>
-    <div {...useSwipeable({
-      onSwipedLeft: () => setCurrentMonthOffset(prev => prev < 2 ? prev + 1 : prev),
-      onSwipedRight: () => setCurrentMonthOffset(prev => prev > 0 ? prev - 1 : prev),
-    })}>
-      <div className="flex items-start justify-between">
-        <h3 className="font-semibold text-sm mb-2">
-          {format(addMonths(new Date(), currentMonthOffset), 'MMMM yyyy')}
-        </h3>
-        
-        {/* Legend moved to right */}
-        <div className="text-xs space-y-1">
-          <div className="flex items-center space-x-1">
-            <div className="w-3 h-3 bg-teal-100 rounded"></div>
-            <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Session</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <div className={`w-3 h-3 rounded ${darkMode ? 'bg-gray-600' : 'bg-gray-200'}`}></div>
-            <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Today</span>
-          </div>
-        </div>
-      </div>
-      
-      <MobileCalendarView 
-        sessions={sessions} 
+  <div className="lg:hidden mb-4 -mx-4 px-4">
+    <div className={`rounded-lg p-3 ${darkMode ? 'bg-gray-800' : 'bg-white shadow'}`}>
+      <MobileCalendarSwiper
+        sessions={sessions}
         darkMode={darkMode}
         onDateClick={handleCalendarDateClick}
-        monthOffset={currentMonthOffset}
+        currentMonthOffset={currentMonthOffset}
+        setCurrentMonthOffset={setCurrentMonthOffset}
       />
     </div>
-  </div>
   </div>
 
   <h2 className={`text-xl md:text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
     Upcoming Games
   </h2>
+
               {sessions.length > 0 ? (
                 <div className="space-y-4 md:space-y-6">
                   {sessions.map((session) => (
