@@ -13,6 +13,12 @@ interface CreateSessionModalProps {
 export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, selectedDate }: CreateSessionModalProps) {
   const [customLocation, setCustomLocation] = useState('')
   
+  const getMinDateTime = () => {
+    const now = new Date()
+    now.setHours(now.getHours() + 1, 0, 0, 0) // Round up to next hour
+    return now.toISOString().slice(0, 16)
+  }
+
   // Smart default date/time
   const getDefaultDateTime = () => {
     const now = new Date()
@@ -197,7 +203,7 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
             <input   type="datetime-local"  
             value={dateTime}
             onChange={(e) => setDateTime(e.target.value)}
-            min={new Date().toISOString().slice(0, 16)}  // Add this line
+            min={getMinDateTime()} 
             className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
             required
             />

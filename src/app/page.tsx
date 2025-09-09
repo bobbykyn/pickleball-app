@@ -279,61 +279,48 @@ export default function Home() {
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50'}`}>
       {/* Header */}
-      <div className={`shadow-sm border-b ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
-        <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-            <div>
-              <h1 className={`text-2xl md:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>🏓 雞仔 Pickle</h1>
-              <p className={`mt-1 text-sm md:text-base ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Let's Pickle Time!!</p>
-              {/* Show username on mobile below subtitle */}
-              {user && (
-                <p className={`mt-1 text-sm md:hidden ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Welcome, {userProfile?.name || user.email}
-                </p>
-              )}
-            </div>
-            
-            <div className="flex items-center space-x-2 md:space-x-4">
-  {user ? (
-    <>
-            
-      {/* Hide username on mobile, show on desktop */}
-      <span className={`hidden md:block ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-        Welcome, {userProfile?.name || user.email}
-      </span>
+<div className={`shadow-sm border-b ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
+  <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
+    <div className="flex justify-between items-center">
+      <div>
+        <h1 className={`text-2xl md:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>🏓 雞仔 Pickle</h1>
+        <p className={`mt-1 text-sm md:text-base ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Let's Pickle Time!!</p>
+        {user && (
+          <p className={`mt-1 text-sm md:hidden ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            Welcome, {userProfile?.name || user.email}
+          </p>
+        )}
+      </div>
       
-      {/* Buttons container */}
-      <div className="flex items-center space-x-2">
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-teal-700 text-white px-4 py-2.5 md:px-4 md:py-2 rounded-lg hover:bg-teal-800 text-base font-medium"
-        >
-          Create Session
-        </button>
-
-    {/* Settings icon - mobile only, top right */}
-    <button
-        onClick={() => setShowSidebar(!showSidebar)}
-        className="md:hidden p-2 text-gray-600 dark:text-gray-400"
-        title="Settings"
-      >
-        <Settings className="w-5 h-5" />
-      </button>
-      </div>
-      </>
-                
-              ) : (
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="bg-teal-700 text-white px-4 py-1.5 md:px-6 md:py-2 rounded-lg hover:bg-teal-800 font-medium text-sm md:text-base"
-                >
-                  Login / Sign Up
-                </button>
-              )}
-            </div>
-          </div>
+      {user ? (
+        <div className="flex items-center gap-2">
+          <span className={`hidden md:block ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            Welcome, {userProfile?.name || user.email}
+          </span>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-teal-700 text-white px-4 py-2 rounded-lg hover:bg-teal-800 font-medium"
+          >
+            Create Session
+          </button>
+          <button
+            onClick={() => setShowSidebar(!showSidebar)}
+            className="md:hidden p-2"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
         </div>
-      </div>
+      ) : (
+        <button
+          onClick={() => setShowAuthModal(true)}
+          className="bg-teal-700 text-white px-4 py-2 rounded-lg hover:bg-teal-800 font-medium"
+        >
+          Login / Sign Up
+        </button>
+      )}
+    </div>
+  </div>
+</div>
 
       {/* Main Content */}
       {user ? (
@@ -468,6 +455,7 @@ export default function Home() {
         isOpen={showHistoryModal}
         onClose={() => setShowHistoryModal(false)}
         darkMode={darkMode}
+        user={user}
         />
     </div>
   )

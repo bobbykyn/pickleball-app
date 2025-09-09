@@ -40,6 +40,7 @@ export default function MobileCalendarSwiper({
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-semibold text-sm">
           {format(addMonths(new Date(), currentMonthOffset), 'MMMM yyyy')}
+          <span className="text-xs text-gray-400">← swipe →</span>
         </h3>
         
         <div className="text-xs space-y-1">
