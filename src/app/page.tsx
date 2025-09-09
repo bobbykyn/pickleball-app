@@ -12,6 +12,7 @@ import CalendarView from '@/components/CalendarView'
 import { Session } from '@/types'
 import Sidebar from '../components/Sidebar'
 import { Settings } from 'lucide-react'
+import { format, addMonths } from 'date-fns'
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null)
@@ -26,6 +27,7 @@ export default function Home() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingSession, setEditingSession] = useState<Session | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [currentMonthOffset, setCurrentMonthOffset] = useState(0)
 
   // Load user profile
   const loadUserProfile = async () => {
@@ -282,21 +284,31 @@ export default function Home() {
               )}
             </div>
             
-            <div className="flex items-center space-x-4">
-              {user ? (
-                <div className="flex items-center space-x-4">
-                  {/* Hide username on desktop (shown inline) */}
-                  <span className={`hidden md:block ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Welcome, {userProfile?.name || user.email}
-                  </span>
-                  
-                  <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="bg-teal-700 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg hover:bg-teal-800 text-sm md:text-base"
-                  >
-                    Create Session
-                  </button>
-                </div>
+            <div className="flex items-center space-x-2 md:space-x-4">
+  {user ? (
+    <>
+      {/* Settings icon - mobile only, top right */}
+      <button
+        onClick={() => setShowSidebar(!showSidebar)}
+        className="md:hidden p-2 text-gray-600 dark:text-gray-400"
+        title="Settings"
+      >
+        <Settings className="w-5 h-5" />
+      </button>
+      
+      {/* Hide username on mobile, show on desktop */}
+      <span className={`hidden md:block ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+        Welcome, {userProfile?.name || user.email}
+      </span>
+      
+      <button
+        onClick={() => setShowCreateModal(true)}
+        className="bg-teal-700 text-white px-4 py-2.5 md:px-4 md:py-2 rounded-lg hover:bg-teal-800 text-base font-medium"
+      >
+        Create Session
+      </button>
+    </>
+                
               ) : (
                 <button
                   onClick={() => setShowAuthModal(true)}
@@ -326,10 +338,40 @@ export default function Home() {
             </div>
 
             {/* Right Column - Sessions - Full width on mobile */}
-            <div className="flex-1">
-              <h2 className={`text-xl md:text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                Upcoming Games
-              </h2>
+<div className="flex-1">
+  {/* Mobile Calendar Banner */}
+  <div className="lg:hidden mb-4 -mx-4 px-4 overflow-hidden">
+    <div className={`rounded-lg p-4 ${darkMode ? 'bg-gray-800' : 'bg-white shadow-lg'}`}>
+      <div className="flex items-center justify-between mb-2">
+        <button 
+          onClick={() => setCurrentMonthOffset(prev => prev - 1)}
+          className="p-1 text-gray-500 hover:text-gray-700"
+        >
+          ←
+        </button>
+        <h3 className="font-semibold text-sm">
+          {format(addMonths(new Date(), currentMonthOffset), 'MMMM yyyy')}
+        </h3>
+        <button 
+          onClick={() => setCurrentMonthOffset(prev => prev + 1)}
+          className="p-1 text-gray-500 hover:text-gray-700"
+        >
+          →
+        </button>
+      </div>
+      <CalendarView 
+        sessions={sessions} 
+        darkMode={darkMode}
+        onDateClick={handleCalendarDateClick}
+        mobileView={true}
+        monthOffset={currentMonthOffset}
+      />
+    </div>
+  </div>
+
+  <h2 className={`text-xl md:text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+    Upcoming Games
+  </h2>
               {sessions.length > 0 ? (
                 <div className="space-y-4 md:space-y-6">
                   {sessions.map((session) => (
@@ -373,15 +415,16 @@ export default function Home() {
       )}
 
       {/* Settings Button - Fixed at bottom left */}
-      {user && (
-        <button
-          onClick={() => setShowSidebar(!showSidebar)}
-          className="fixed bottom-6 left-6 bg-teal-700 text-white p-4 rounded-full shadow-lg hover:bg-teal-800 transition-colors z-30"
-          title="Settings"
-        >
-          <Settings className="w-6 h-6" />
-        </button>
-      )}
+      {/* Settings Button - Fixed at bottom left - Desktop only */}
+{user && (
+  <button
+    onClick={() => setShowSidebar(!showSidebar)}
+    className="hidden md:block fixed bottom-6 left-6 bg-teal-700 text-white p-4 rounded-full shadow-lg hover:bg-teal-800 transition-colors z-30"
+    title="Settings"
+  >
+    <Settings className="w-6 h-6" />
+  </button>
+)}
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       <CreateSessionModal 

@@ -128,9 +128,9 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
         }`}>
           <div className="flex items-center space-x-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-teal-700">
+            <div className={`text-2xl font-bold ${darkMode ? 'text-teal-400' : 'text-teal-700'}`}>
                 ${costPerPerson.toFixed(2)}
-              </div>
+            </div>
               <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>per person</div>
             </div>
             <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -139,8 +139,8 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
             </div>
           </div>
           {attendeeCount > 1 && (
-            <div className="text-teal-700 text-sm font-bold">
-              OJ!!
+            <div className={`text-sm font-bold ${darkMode ? 'text-teal-400' : 'text-teal-700'}`}>
+              OJ!!  .
             </div>
           )}
         </div>

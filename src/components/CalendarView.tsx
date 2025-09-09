@@ -5,12 +5,15 @@ interface CalendarViewProps {
   sessions: Session[]
   darkMode: boolean
   onDateClick?: (date: Date) => void
+  mobileView?: boolean
+  monthOffset?: number
 }
 
-export default function CalendarView({ sessions, darkMode, onDateClick }: CalendarViewProps) {
+export default function CalendarView({ sessions, darkMode, onDateClick, mobileView = false, monthOffset = 0 }: CalendarViewProps) {
   const currentDate = new Date()
-  const currentMonth = startOfMonth(currentDate)
-  const nextMonth = startOfMonth(addMonths(currentDate, 1))
+  const effectiveDate = mobileView ? addMonths(currentDate, monthOffset) : currentDate
+  const currentMonth = startOfMonth(effectiveDate)
+  const nextMonth = startOfMonth(addMonths(effectiveDate, 1))
   
   const renderMonth = (monthStart: Date, title: string) => {
     const monthEnd = endOfMonth(monthStart)
@@ -104,9 +107,14 @@ export default function CalendarView({ sessions, darkMode, onDateClick }: Calend
       <h2 className={`text-lg font-bold mb-4 text-center ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
         Calendar
       </h2>
-      
-      {renderMonth(currentMonth, format(currentMonth, 'MMMM yyyy'))}
-      {renderMonth(nextMonth, format(nextMonth, 'MMMM yyyy'))}
+      {mobileView ? (
+        renderMonth(currentMonth, format(currentMonth, 'MMMM yyyy'))
+      ) : (
+        <>
+          {renderMonth(currentMonth, format(currentMonth, 'MMMM yyyy'))}
+          {renderMonth(nextMonth, format(nextMonth, 'MMMM yyyy'))}
+        </>
+      )}
       
       {/* Legend */}
       <div className="mt-4 space-y-2">
