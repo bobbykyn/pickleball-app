@@ -13,19 +13,13 @@ interface CreateSessionModalProps {
 export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, selectedDate }: CreateSessionModalProps) {
   const [customLocation, setCustomLocation] = useState('')
   
-  const getMinDateTime = () => {
-    const now = new Date()
-    now.setHours(now.getHours() + 1, 0, 0, 0) // Round up to next hour
-    return now.toISOString().slice(0, 16)
-  }
-
-  // Smart default date/time
+    // Smart default date/time
   const getDefaultDateTime = () => {
     const now = new Date()
     const currentYear = now.getFullYear()
     const currentMonth = now.getMonth()
-    
-    // Use 2025 until Jan 1, 2026, then use 2026
+
+        // Use 2025 until Jan 1, 2026, then use 2026
     const defaultYear = (currentYear === 2025 && currentMonth === 11) ? 2026 : 2025
     
     // Set to next Friday at 6 PM as default
@@ -37,6 +31,12 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
     
     return nextFriday.toISOString().slice(0, 16) // Format for datetime-local input
   }
+
+  const getMinDateTime = () => {
+    const now = new Date()
+    now.setHours(now.getHours() + 1, 0, 0, 0) // Round up to next hour
+    return now.toISOString().slice(0, 16)
+  } 
   
   const [title, setTitle] = useState('')
   const [dateTime, setDateTime] = useState(getDefaultDateTime())
