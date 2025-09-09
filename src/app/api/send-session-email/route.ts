@@ -19,11 +19,24 @@ export async function POST(request: Request) {
       .eq('id', sessionId)
       .single()
     
-    // Get all users except creator
-    const { data: users } = await supabase
-      .from('profiles')
-      .select('email, name')
-      .neq('id', session.created_by)
+    // Get ALL users to notify (excluding creator)
+const { data: users, error: usersError } = await supabase
+.from('profiles')
+.select('email, name')
+.neq('id', session.created_by)
+
+console.log('Users query error:', usersError)
+console.log('Found users:', users)
+
+// Add this check
+if (!users || users.length === 0) {
+console.log('No users found to email')
+return NextResponse.json({ 
+  success: true, 
+  warning: 'No users to notify',
+  debug: { sessionCreator: session.created_by }
+})
+}
     
     // Send emails
     for (const user of users || []) {
