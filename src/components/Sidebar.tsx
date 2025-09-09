@@ -140,7 +140,7 @@ export default function Sidebar({ isOpen, onClose, user, darkMode, onToggleDarkM
 
         <div className="mt-8 pt-6 border-t border-gray-200">
           <p className="text-xs text-gray-500 text-center">
-          雞仔 Pickle  v1.0<br />
+          雞仔 Pickle   v1.0<br />
             🏓🏓🏓🏓🏓
           </p>
         </div>
