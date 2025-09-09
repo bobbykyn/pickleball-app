@@ -13,6 +13,9 @@ import { Session } from '@/types'
 import Sidebar from '../components/Sidebar'
 import { Settings } from 'lucide-react'
 import { format, addMonths } from 'date-fns'
+import { useSwipeable } from 'react-swipeable'
+import MobileCalendarView from '@/components/MobileCalendarView'
+import HistoryModal from '@/components/HistoryModal'
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null)
@@ -28,6 +31,7 @@ export default function Home() {
   const [editingSession, setEditingSession] = useState<Session | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [currentMonthOffset, setCurrentMonthOffset] = useState(0)
+  const [showHistoryModal, setShowHistoryModal] = useState(false)
 
   // Load user profile
   const loadUserProfile = async () => {
@@ -61,8 +65,9 @@ export default function Home() {
             profiles(name, email)
           )
         `)
+        .gte('date_time', new Date().toISOString())  // Changed from 'now' to new Date().toISOString()
         .order('date_time', { ascending: true })
-
+  
       if (error) throw error
       setSessions(data || [])
     } catch (error) {
@@ -287,27 +292,31 @@ export default function Home() {
             <div className="flex items-center space-x-2 md:space-x-4">
   {user ? (
     <>
-      {/* Settings icon - mobile only, top right */}
-      <button
+            
+      {/* Hide username on mobile, show on desktop */}
+      <span className={`hidden md:block ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+        Welcome, {userProfile?.name || user.email}
+      </span>
+      
+      {/* Buttons container */}
+      <div className="flex items-center space-x-2">
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="bg-teal-700 text-white px-4 py-2.5 md:px-4 md:py-2 rounded-lg hover:bg-teal-800 text-base font-medium"
+        >
+          Create Session
+        </button>
+
+    {/* Settings icon - mobile only, top right */}
+    <button
         onClick={() => setShowSidebar(!showSidebar)}
         className="md:hidden p-2 text-gray-600 dark:text-gray-400"
         title="Settings"
       >
         <Settings className="w-5 h-5" />
       </button>
-      
-      {/* Hide username on mobile, show on desktop */}
-      <span className={`hidden md:block ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-        Welcome, {userProfile?.name || user.email}
-      </span>
-      
-      <button
-        onClick={() => setShowCreateModal(true)}
-        className="bg-teal-700 text-white px-4 py-2.5 md:px-4 md:py-2 rounded-lg hover:bg-teal-800 text-base font-medium"
-      >
-        Create Session
-      </button>
-    </>
+      </div>
+      </>
                 
               ) : (
                 <button
@@ -340,33 +349,38 @@ export default function Home() {
             {/* Right Column - Sessions - Full width on mobile */}
 <div className="flex-1">
   {/* Mobile Calendar Banner */}
-  <div className="lg:hidden mb-4 -mx-4 px-4 overflow-hidden">
-    <div className={`rounded-lg p-4 ${darkMode ? 'bg-gray-800' : 'bg-white shadow-lg'}`}>
-      <div className="flex items-center justify-between mb-2">
-        <button 
-          onClick={() => setCurrentMonthOffset(prev => prev - 1)}
-          className="p-1 text-gray-500 hover:text-gray-700"
-        >
-          ←
-        </button>
-        <h3 className="font-semibold text-sm">
+<div className="lg:hidden mb-4 -mx-4 px-4">
+  <div className={`rounded-lg p-3 ${darkMode ? 'bg-gray-800' : 'bg-white shadow'}`}>
+    <div {...useSwipeable({
+      onSwipedLeft: () => setCurrentMonthOffset(prev => prev < 2 ? prev + 1 : prev),
+      onSwipedRight: () => setCurrentMonthOffset(prev => prev > 0 ? prev - 1 : prev),
+    })}>
+      <div className="flex items-start justify-between">
+        <h3 className="font-semibold text-sm mb-2">
           {format(addMonths(new Date(), currentMonthOffset), 'MMMM yyyy')}
         </h3>
-        <button 
-          onClick={() => setCurrentMonthOffset(prev => prev + 1)}
-          className="p-1 text-gray-500 hover:text-gray-700"
-        >
-          →
-        </button>
+        
+        {/* Legend moved to right */}
+        <div className="text-xs space-y-1">
+          <div className="flex items-center space-x-1">
+            <div className="w-3 h-3 bg-teal-100 rounded"></div>
+            <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Session</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <div className={`w-3 h-3 rounded ${darkMode ? 'bg-gray-600' : 'bg-gray-200'}`}></div>
+            <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Today</span>
+          </div>
+        </div>
       </div>
-      <CalendarView 
+      
+      <MobileCalendarView 
         sessions={sessions} 
         darkMode={darkMode}
         onDateClick={handleCalendarDateClick}
-        mobileView={true}
         monthOffset={currentMonthOffset}
       />
     </div>
+  </div>
   </div>
 
   <h2 className={`text-xl md:text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -462,7 +476,16 @@ export default function Home() {
           setShowSidebar(false)
           setShowProfileModal(true)
         }}
-      />
+        onOpenHistory={() => {
+          setShowSidebar(false)
+          setShowHistoryModal(true) 
+        }}
+        /> 
+        <HistoryModal
+        isOpen={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        darkMode={darkMode}
+        />
     </div>
   )
 }

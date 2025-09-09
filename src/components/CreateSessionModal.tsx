@@ -194,12 +194,12 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
               <Calendar className="w-4 h-4 inline mr-1" />
               Date & Time
             </label>
-            <input
-              type="datetime-local"
-              value={dateTime}
-              onChange={(e) => setDateTime(e.target.value)}
-              className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
-              required
+            <input   type="datetime-local"  
+            value={dateTime}
+            onChange={(e) => setDateTime(e.target.value)}
+            min={new Date().toISOString().slice(0, 16)}  // Add this line
+            className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+            required
             />
           </div>
 

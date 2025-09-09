@@ -1,7 +1,7 @@
 'use client'
 
 import { User } from '@supabase/supabase-js'
-import { X, User as UserIcon, Bell, Moon, Sun } from 'lucide-react'
+import { X, User as UserIcon, Bell, Moon, Sun, Calendar } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 interface SidebarProps {
@@ -12,9 +12,10 @@ interface SidebarProps {
   onToggleDarkMode: () => void
   onSignOut: () => void
   onOpenProfile: () => void
+  onOpenHistory?: () => void
 }
 
-export default function Sidebar({ isOpen, onClose, user, darkMode, onToggleDarkMode, onSignOut, onOpenProfile }: SidebarProps) {
+export default function Sidebar({ isOpen, onClose, user, darkMode, onToggleDarkMode, onSignOut, onOpenProfile, onOpenHistory }: SidebarProps) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -111,6 +112,21 @@ export default function Sidebar({ isOpen, onClose, user, darkMode, onToggleDarkM
             <p className="text-sm text-gray-600 mt-2 ml-8">Update name, phone, preferences</p>
           </div>
         </div>
+
+{/* Game History */}
+<div className="p-4 bg-gray-50 rounded-lg">
+  <button 
+    onClick={onOpenHistory}
+    className="w-full flex items-center justify-between"
+  >
+    <div className="flex items-center space-x-3">
+      <Calendar className="w-5 h-5 text-gray-600" />
+      <span className="font-medium text-gray-900">Game History</span>
+    </div>
+    <span className="text-teal-700 text-sm font-medium">View</span>
+  </button>
+  <p className="text-sm text-gray-600 mt-2 ml-8">View past games and attendance</p>
+</div>
 
         {/* Sign Out Button at Bottom */}
         <div className="mt-6 pt-4 border-t border-gray-200">
