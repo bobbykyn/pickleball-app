@@ -5,7 +5,13 @@ import { createClient } from '@supabase/supabase-js'
 const resend = new Resend(process.env.RESEND_API_KEY)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY! // Need service key for bypass RLS
+  process.env.SUPABASE_SERVICE_KEY!,
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    }
+  }
 )
 
 export async function POST(request: Request) {
@@ -18,30 +24,45 @@ export async function POST(request: Request) {
       .select('*, profiles:created_by(email, name)')
       .eq('id', sessionId)
       .single()
+
+    if (!session) {
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+    }
     
     // Get ALL users to notify (excluding creator)
-const { data: users, error: usersError } = await supabase
-.from('profiles')
-.select('email, name')
-.neq('id', session.created_by)
+    const { data: users, error: usersError } = await supabase
+      .from('profiles')
+      .select('email, name')
+      .neq('id', session.created_by)
 
-console.log('Users query error:', usersError)
-console.log('Found users:', users)
+    // DEBUGGING
+    console.log('Query error:', usersError)
+    console.log('Found users:', users)
+    console.log('Number of users found:', users?.length || 0)
+    console.log('Sending to these emails:', users?.map(u => u.email))
 
-// Add this check
-if (!users || users.length === 0) {
-console.log('No users found to email')
-return NextResponse.json({ 
-  success: true, 
-  warning: 'No users to notify',
-  debug: { sessionCreator: session.created_by }
-})
-}
+    if (!users || users.length === 0) {
+      const { data: allUsers } = await supabase
+        .from('profiles')
+        .select('email, id')
+      
+      console.log('DEBUG - All users in database:', allUsers)
+      console.log('DEBUG - Session creator ID:', session.created_by)
+      
+      return NextResponse.json({ 
+        error: 'No users to notify',
+        debug: {
+          allUsersCount: allUsers?.length || 0,
+          creatorId: session.created_by
+        }
+      })
+    }
     
     // Send emails
-    for (const user of users || []) {
+    for (const user of users) {
+      console.log('Sending email to:', user.email)
       await resend.emails.send({
-        from: 'Pickle Time <noreply@resend.dev>', // Use resend.dev for testing
+        from: 'Pickle Time <noreply@resend.dev>',
         to: user.email,
         subject: `Let's Pickle Time! @ 雞仔Pickle: ${session.title}`,
         html: `
@@ -54,8 +75,9 @@ return NextResponse.json({
       })
     }
     
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    return NextResponse.json({ error }, { status: 500 })
+    return NextResponse.json({ success: true, emailsSent: users.length })
+  } catch (error: any) {
+    console.error('Error in send-session-email:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
