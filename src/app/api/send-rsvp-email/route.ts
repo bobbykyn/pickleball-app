@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_KEY!,
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    }
+  }
+)
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,6 +39,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 })
     }
 
+    console.log('DEBUG - Session data:', {
+      title: session.title,
+      created_by: session.created_by,
+      rsvps: session.rsvps,
+      creator_profile: session.profiles
+    })
+
     // Get recipients: existing "yes" RSVPs + creator (if they want notifications)
     const recipients = []
     
@@ -48,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     // Add existing "yes" RSVPs who want notifications
     for (const rsvp of session.rsvps || []) {
-      if (rsvp.profiles?.wants_rsvp_updates) {
+      if (rsvp.status === 'yes' && rsvp.profiles?.wants_rsvp_updates) {
         const rsvpEmail = await getEmailFromUserId(rsvp.user_id)
         if (rsvpEmail) {
           recipients.push(rsvpEmail)
@@ -129,6 +146,10 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('API Error:', error)
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

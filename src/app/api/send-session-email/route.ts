@@ -37,6 +37,15 @@ export async function POST(request: Request) {
       .neq('id', session.created_by)
       .eq('wants_notifications', true)
 
+    // DEBUG: Also get all profiles to see what's in the database
+    const { data: allProfiles, error: allProfilesError } = await supabase
+      .from('profiles')
+      .select('id, name, wants_notifications')
+    
+    console.log('DEBUG - All profiles in database:', allProfiles)
+    console.log('DEBUG - Profiles with wants_notifications=true:', profiles)
+    console.log('DEBUG - Session creator ID:', session.created_by)
+
     if (profilesError || !profiles || profiles.length === 0) {
       console.log('No profiles found or error:', profilesError)
       return NextResponse.json({ 
