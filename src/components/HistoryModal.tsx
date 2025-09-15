@@ -33,7 +33,7 @@ export default function HistoryModal({ isOpen, onClose, darkMode, user }: Histor
           profiles:created_by(name),
           rsvps(
             *,
-            profiles(name, email)
+            profiles(name)
           )
         `)
         .lt('date_time', now)  // Only past sessions

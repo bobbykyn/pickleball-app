@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     // Get session details
     const { data: session } = await supabase
       .from('sessions')
-      .select('*, profiles:created_by(email, name)')
+      .select('*, profiles:created_by(name)')
       .eq('id', sessionId)
       .single()
 
@@ -30,29 +30,48 @@ export async function POST(request: Request) {
     }
     
     // Get ALL users to notify (excluding creator)
-    const { data: users, error: usersError } = await supabase
+    // First get all profile IDs except the creator
+    const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('email, name')
+      .select('id, name, wants_notifications')
       .neq('id', session.created_by)
+      .eq('wants_notifications', true)
+
+    if (profilesError || !profiles || profiles.length === 0) {
+      console.log('No profiles found or error:', profilesError)
+      return NextResponse.json({ 
+        error: 'No users to notify',
+        debug: { profilesError, profilesCount: profiles?.length || 0 }
+      })
+    }
+
+    // Get emails from auth.users for each profile
+    const users = []
+    for (const profile of profiles) {
+      const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(profile.id)
+      if (!authError && authUser?.user?.email) {
+        users.push({
+          email: authUser.user.email,
+          name: profile.name
+        })
+      } else {
+        console.log(`Could not get email for user ${profile.id}:`, authError)
+      }
+    }
 
     // DEBUGGING
-    console.log('Query error:', usersError)
     console.log('Found users:', users)
     console.log('Number of users found:', users?.length || 0)
     console.log('Sending to these emails:', users?.map(u => u.email))
 
     if (!users || users.length === 0) {
-      const { data: allUsers } = await supabase
-        .from('profiles')
-        .select('email, id')
-      
-      console.log('DEBUG - All users in database:', allUsers)
+      console.log('DEBUG - No users found to notify')
       console.log('DEBUG - Session creator ID:', session.created_by)
       
       return NextResponse.json({ 
         error: 'No users to notify',
         debug: {
-          allUsersCount: allUsers?.length || 0,
+          usersCount: users?.length || 0,
           creatorId: session.created_by
         }
       })

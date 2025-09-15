@@ -17,9 +17,9 @@ export async function POST(request: NextRequest) {
       .from('sessions')
       .select(`
         *,
-        profiles:created_by(name, email, wants_rsvp_updates),
+        profiles:created_by(name, wants_rsvp_updates),
         rsvps(
-          profiles(name, email, wants_rsvp_updates)
+          profiles(name, wants_rsvp_updates)
         )
       `)
       .eq('id', sessionId)
@@ -32,17 +32,29 @@ export async function POST(request: NextRequest) {
     // Get recipients: existing "yes" RSVPs + creator (if they want notifications)
     const recipients = []
     
+    // Helper function to get email from user ID
+    const getEmailFromUserId = async (userId: string) => {
+      const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(userId)
+      return authError ? null : authUser?.user?.email
+    }
+
     // Add session creator if they want RSVP updates
-    if (session.profiles?.wants_rsvp_updates && session.profiles?.email) {
-      recipients.push(session.profiles.email)
+    if (session.profiles?.wants_rsvp_updates) {
+      const creatorEmail = await getEmailFromUserId(session.created_by)
+      if (creatorEmail) {
+        recipients.push(creatorEmail)
+      }
     }
 
     // Add existing "yes" RSVPs who want notifications
-    session.rsvps?.forEach((rsvp: any) => {
-      if (rsvp.profiles?.wants_rsvp_updates && rsvp.profiles?.email) {
-        recipients.push(rsvp.profiles.email)
+    for (const rsvp of session.rsvps || []) {
+      if (rsvp.profiles?.wants_rsvp_updates) {
+        const rsvpEmail = await getEmailFromUserId(rsvp.user_id)
+        if (rsvpEmail) {
+          recipients.push(rsvpEmail)
+        }
       }
-    })
+    }
 
     // Remove duplicates and filter out the new member (they don't need to email themselves)
     const uniqueRecipients = [...new Set(recipients)]

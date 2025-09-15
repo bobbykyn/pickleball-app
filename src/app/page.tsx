@@ -66,7 +66,7 @@ export default function Home() {
           profiles:created_by(name),
           rsvps(
             *,
-            profiles(name, email)
+            profiles(name)
           )
         `)
         .gte('date_time', new Date().toISOString())  // Changed from 'now' to new Date().toISOString()
