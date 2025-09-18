@@ -84,59 +84,76 @@ export async function POST(request: NextRequest) {
     const attendeeCount = (session.rsvps?.filter((r: any) => r.status === 'yes').length || 0) + 1
     const costPerPerson = (session.total_cost || 0) / attendeeCount
 
-    // Send email
-    const { error: emailError } = await resend.emails.send({
-      from: 'Pickleball Crew <onboarding@resend.dev>',
-      to: uniqueRecipients,
-      subject: `🎯 ${newMemberName} joined ${session.title}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #0f766e; text-align: center;">🎯 Someone Joined Your Game!</h1>
-          
-          <div style="background: #f0fdfa; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <h2 style="color: #134e4a; margin-top: 0;">${session.title}</h2>
-            
-            <div style="background: #dcfdf7; border-radius: 6px; padding: 15px; margin: 15px 0; border-left: 4px solid #14b8a6;">
-              <strong style="color: #0f766e;">🎉 ${newMemberName} just joined!</strong>
+    // Send email with rate limiting
+    console.log('Sending RSVP notifications to:', uniqueRecipients)
+    
+    // Send emails one by one to respect rate limits
+    for (let i = 0; i < uniqueRecipients.length; i++) {
+      const recipient = uniqueRecipients[i]
+      
+      try {
+        const { error: emailError } = await resend.emails.send({
+          from: 'Pickleball Crew <onboarding@resend.dev>',
+          to: recipient,
+          subject: `🎯 ${newMemberName} joined ${session.title}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h1 style="color: #0f766e; text-align: center;">🎯 Someone Joined Your Game!</h1>
+              
+              <div style="background: #f0fdfa; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                <h2 style="color: #134e4a; margin-top: 0;">${session.title}</h2>
+                
+                <div style="background: #dcfdf7; border-radius: 6px; padding: 15px; margin: 15px 0; border-left: 4px solid #14b8a6;">
+                  <strong style="color: #0f766e;">🎉 ${newMemberName} just joined!</strong>
+                </div>
+                
+                <div style="margin: 15px 0;">
+                  <strong>📅 When:</strong> ${new Date(session.date_time).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </div>
+                
+                <div style="margin: 15px 0;">
+                  <strong>📍 Where:</strong> ${session.location}
+                </div>
+                
+                <div style="margin: 15px 0; font-size: 18px; color: #0f766e;">
+                  <strong>💰 New Cost: $${costPerPerson.toFixed(2)} per person</strong>
+                </div>
+                
+                <div style="margin: 15px 0;">
+                  <strong>👥 Players:</strong> ${attendeeCount}/${session.max_players}
+                </div>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="https://pickleball-app-1.vercel.app" 
+                   style="background: #0f766e; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                  View Session
+                </a>
+              </div>
             </div>
-            
-            <div style="margin: 15px 0;">
-              <strong>📅 When:</strong> ${new Date(session.date_time).toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
-            </div>
-            
-            <div style="margin: 15px 0;">
-              <strong>📍 Where:</strong> ${session.location}
-            </div>
-            
-            <div style="margin: 15px 0; font-size: 18px; color: #0f766e;">
-              <strong>💰 New Cost: $${costPerPerson.toFixed(2)} per person</strong>
-            </div>
-            
-            <div style="margin: 15px 0;">
-              <strong>👥 Players:</strong> ${attendeeCount}/${session.max_players}
-            </div>
-          </div>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="https://pickleball-app-1.vercel.app" 
-               style="background: #0f766e; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-              View Session
-            </a>
-          </div>
-        </div>
-      `,
-    })
+          `,
+        })
 
-    if (emailError) {
-      console.error('Email error:', emailError)
-      return NextResponse.json({ error: 'Failed to send emails' }, { status: 500 })
+        if (emailError) {
+          console.error('❌ Failed to send RSVP email to:', recipient, emailError)
+        } else {
+          console.log('✅ RSVP email sent successfully to:', recipient)
+        }
+      } catch (error) {
+        console.error('❌ Error sending RSVP email to:', recipient, error)
+      }
+      
+      // Add delay between emails to respect rate limits
+      if (i < uniqueRecipients.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 600)) // 600ms delay
+      }
     }
 
     return NextResponse.json({ 

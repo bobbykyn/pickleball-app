@@ -86,21 +86,33 @@ export async function POST(request: Request) {
       })
     }
     
-    // Send emails
-    for (const user of users) {
+    // Send emails with rate limiting (2 requests per second max)
+    for (let i = 0; i < users.length; i++) {
+      const user = users[i]
       console.log('Sending email to:', user.email)
-      await resend.emails.send({
-        from: 'Pickle Time <noreply@resend.dev>',
-        to: user.email,
-        subject: `Let's Pickle Time! @ 雞仔Pickle: ${session.title}`,
-        html: `
-          <h2>New session created!</h2>
-          <p><strong>${session.title}</strong></p>
-          <p>📅 ${new Date(session.date_time).toLocaleString()}</p>
-          <p>📍 ${session.location}</p>
-          <a href="https://pickleball-app-1.vercel.app">Join Now</a>
-        `
-      })
+      
+      try {
+        await resend.emails.send({
+          from: 'Pickle Time <noreply@resend.dev>',
+          to: user.email,
+          subject: `Let's Pickle Time! @ 雞仔Pickle: ${session.title}`,
+          html: `
+            <h2>New session created!</h2>
+            <p><strong>${session.title}</strong></p>
+            <p>📅 ${new Date(session.date_time).toLocaleString()}</p>
+            <p>📍 ${session.location}</p>
+            <a href="https://pickleball-app-1.vercel.app">Join Now</a>
+          `
+        })
+        console.log('✅ Email sent successfully to:', user.email)
+      } catch (emailError) {
+        console.error('❌ Failed to send email to:', user.email, emailError)
+      }
+      
+      // Add delay between emails to respect rate limits (2 per second = 500ms delay)
+      if (i < users.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 600)) // 600ms delay
+      }
     }
     
     return NextResponse.json({ success: true, emailsSent: users.length })
