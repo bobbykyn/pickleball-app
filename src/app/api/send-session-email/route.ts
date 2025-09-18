@@ -93,7 +93,7 @@ export async function POST(request: Request) {
       
       try {
         await resend.emails.send({
-          from: 'Pickle Time <noreply@resend.dev>',
+          from: 'Pickle Time <bobby.ng@unpredikable.com>',
           to: user.email,
           subject: `Let's Pickle Time! @ 雞仔Pickle: ${session.title}`,
           html: `

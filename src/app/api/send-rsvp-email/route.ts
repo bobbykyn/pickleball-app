@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
       
       try {
         const { error: emailError } = await resend.emails.send({
-          from: 'Pickleball Crew <onboarding@resend.dev>',
+          from: 'Pickle Time <bobby.ng@unpredikable.com>',
           to: recipient,
           subject: `🎯 ${newMemberName} joined ${session.title}`,
           html: `
