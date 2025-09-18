@@ -25,8 +25,10 @@ export default function HistoryModal({ isOpen, onClose, darkMode, user }: Histor
 
   const loadHistoricalSessions = async () => {
     try {
+      if (!user) return
+
       const now = new Date().toISOString()
-      const { data, error } = await supabase
+      const { data: allSessions, error } = await supabase
         .from('sessions')
         .select(`
           *,
@@ -41,7 +43,18 @@ export default function HistoryModal({ isOpen, onClose, darkMode, user }: Histor
         .limit(50)
 
       if (error) throw error
-      setSessions(data || [])
+
+      // Filter sessions based on privacy settings (same logic as main page)
+      const visibleSessions = allSessions?.filter(session => {
+        if (!session.is_private) return true
+        
+        const isCreator = session.created_by === user.id
+        const isInvited = session.invited_users?.includes(user.id) || false
+        
+        return isCreator || isInvited
+      }) || []
+
+      setSessions(visibleSessions)
     } catch (error) {
       console.error('Error loading history:', error)
     } finally {

@@ -57,6 +57,19 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   
+  // Private session states
+  const [isPrivate, setIsPrivate] = useState(false)
+  const [invitedUsers, setInvitedUsers] = useState<string[]>([])
+  const [allUsers, setAllUsers] = useState<any[]>([])
+  const [showUserSelector, setShowUserSelector] = useState(false)
+  
+  // Load all users when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      loadAllUsers()
+    }
+  }, [isOpen])
+
   // Update date when selectedDate prop changes
   useEffect(() => {
     if (isOpen && selectedDate) {
@@ -65,6 +78,25 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
       setDateTime(selected.toISOString().slice(0, 16))
     }
   }, [isOpen, selectedDate])
+
+  const loadAllUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .order('name')
+      
+      if (!error && data) {
+        setAllUsers(data)
+      }
+    } catch (error) {
+      console.error('Error loading users:', error)
+    }
+  }
+
+  const generatePrivateKey = () => {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+  }
 
   // Cost calculation logic
   const calculateCost = (dateTime: string, durationHours: number) => {
@@ -111,20 +143,29 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
       // Simply append seconds and timezone to make it a valid ISO string
       const isoDateTime = dateTime + ':00+08:00' // Hong Kong timezone (UTC+8)
       
+      const sessionData: any = {
+        title,
+        date_time: isoDateTime,
+        location: location === 'Custom Location...' ? customLocation : location,
+        max_players: maxPlayers,
+        duration_hours: duration,
+        total_cost: totalCost,
+        is_peak_time: isPeak,
+        cost_per_person: totalCost,
+        notes: notes || null,
+        created_by: user.id
+      }
+
+      // Add private session fields if it's private
+      if (isPrivate) {
+        sessionData.is_private = true
+        sessionData.private_key = generatePrivateKey()
+        sessionData.invited_users = invitedUsers
+      }
+
       const { data, error } = await supabase
         .from('sessions')
-        .insert({
-          title,
-          date_time: isoDateTime,
-          location: location === 'Custom Location...' ? customLocation : location,
-          max_players: maxPlayers,
-          duration_hours: duration,
-          total_cost: totalCost,
-          is_peak_time: isPeak,
-          cost_per_person: totalCost,
-          notes: notes || null,
-          created_by: user.id
-        })
+        .insert(sessionData)
         .select('id')
         .single()
 
@@ -249,6 +290,61 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
               required
             />
           </div>
+
+          {/* Private Session Toggle */}
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="isPrivate"
+              checked={isPrivate}
+              onChange={(e) => setIsPrivate(e.target.checked)}
+              className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+            />
+            <label htmlFor="isPrivate" className="text-sm font-medium text-gray-700">
+              🔒 Create Private Session
+            </label>
+          </div>
+
+          {/* User Selection for Private Sessions */}
+          {isPrivate && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                👥 Invite Users
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowUserSelector(!showUserSelector)}
+                className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 bg-white"
+              >
+                {invitedUsers.length > 0 
+                  ? `Selected ${invitedUsers.length} users` 
+                  : 'Select users to invite'
+                }
+              </button>
+              
+              {showUserSelector && (
+                <div className="mt-2 max-h-40 overflow-y-auto border rounded-lg p-2 bg-gray-50">
+                  {allUsers.map((user) => (
+                    <label key={user.id} className="flex items-center space-x-2 p-1 hover:bg-gray-100 rounded">
+                      <input
+                        type="checkbox"
+                        checked={invitedUsers.includes(user.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setInvitedUsers([...invitedUsers, user.id])
+                          } else {
+                            setInvitedUsers(invitedUsers.filter(id => id !== user.id))
+                          }
+                        }}
+                        className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                      />
+                      <span className="text-sm text-gray-700">{user.name}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

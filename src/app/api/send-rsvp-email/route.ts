@@ -16,6 +16,12 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if notifications are disabled
+    if (process.env.DISABLE_EMAIL_NOTIFICATIONS === 'true') {
+      console.log('RSVP email notifications disabled via environment variable')
+      return NextResponse.json({ success: true, message: 'Notifications disabled' })
+    }
+
     const { sessionId, newMemberName, rsvpStatus } = await request.json()
 
     if (rsvpStatus !== 'yes') {

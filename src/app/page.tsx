@@ -59,7 +59,10 @@ export default function Home() {
   // Load sessions from database
   const loadSessions = async () => {
     try {
-      const { data, error } = await supabase
+      if (!user) return
+
+      // Get all sessions (we'll filter them client-side for privacy)
+      const { data: allSessions, error } = await supabase
         .from('sessions')
         .select(`
           *,
@@ -69,11 +72,26 @@ export default function Home() {
             profiles(name)
           )
         `)
-        .gte('date_time', new Date().toISOString())  // Changed from 'now' to new Date().toISOString()
+        .gte('date_time', new Date().toISOString())
         .order('date_time', { ascending: true })
   
       if (error) throw error
-      setSessions(data || [])
+
+      // Filter sessions based on privacy settings
+      const visibleSessions = allSessions?.filter(session => {
+        // Show public sessions to everyone
+        if (!session.is_private) return true
+        
+        // Show private sessions only to:
+        // 1. The creator
+        // 2. Invited users
+        const isCreator = session.created_by === user.id
+        const isInvited = session.invited_users?.includes(user.id) || false
+        
+        return isCreator || isInvited
+      }) || []
+
+      setSessions(visibleSessions)
     } catch (error) {
       console.error('Error loading sessions:', error)
     }
@@ -122,6 +140,35 @@ export default function Home() {
     })
 
     return () => subscription.unsubscribe()
+  }, [])
+
+  // Handle private session URLs
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const privateKey = urlParams.get('private')
+    
+    if (privateKey) {
+      // Load private session
+      fetch(`/api/get-private-session?key=${privateKey}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.session) {
+            // Add the private session to the sessions list
+            setSessions(prev => {
+              const exists = prev.find(s => s.id === data.session.id)
+              if (!exists) {
+                return [data.session, ...prev]
+              }
+              return prev
+            })
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname)
+          }
+        })
+        .catch(error => {
+          console.error('Error loading private session:', error)
+        })
+    }
   }, [])
 
   // Load sessions when user changes

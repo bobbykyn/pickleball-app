@@ -53,7 +53,8 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
     }`}>
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
-        <h3 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+        <h3 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'} flex items-center gap-2`}>
+          {session.is_private && <span className="text-xs">🔒</span>}
           {session.title}
         </h3>
         <div className="flex items-center space-x-2">
@@ -68,6 +69,25 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
           
           {/* Action buttons for creators/admin */}
           <div className="flex items-center space-x-1">
+            {/* Share button for private sessions */}
+            {session.is_private && isCreator && (
+              <button
+                onClick={() => {
+                  const shareUrl = `${window.location.origin}?private=${session.private_key}`
+                  navigator.clipboard.writeText(shareUrl)
+                  alert('Share link copied to clipboard!')
+                }}
+                className={`p-2 rounded-lg transition-colors ${
+                  darkMode
+                    ? 'text-green-400 hover:bg-green-900/20'
+                    : 'text-green-600 hover:bg-green-50'
+                }`}
+                title="Copy share link"
+              >
+                📋
+              </button>
+            )}
+            
             {canEdit && onEdit && (
               <button
                 onClick={() => onEdit(session)}

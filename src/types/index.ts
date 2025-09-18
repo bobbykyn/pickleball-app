@@ -22,8 +22,11 @@ export interface Profile {
   cost_per_person?: number
   notes: string | null
   created_at: string
+  is_private?: boolean
+  private_key?: string
   profiles?: Profile
   rsvps?: RSVP[]
+  invited_users?: string[]
   }
   
   export interface RSVP {
