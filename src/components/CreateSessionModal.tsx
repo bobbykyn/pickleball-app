@@ -130,24 +130,6 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
 
       if (error) throw error
 
-      // Send email notifications
-      try {
-        const response = await fetch('/api/send-session-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ sessionId: data?.id }),
-        })
-        
-        if (!response.ok) {
-          console.error('Failed to send email notifications')
-        }
-      } catch (emailError) {
-        console.error('Email notification error:', emailError)
-        // Don't fail the session creation if email fails
-      }
-
       setMessage('Session created successfully!')
       setTimeout(() => {
         onClose()
@@ -161,6 +143,19 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
         setNotes('')
         setMessage('')
       }, 1000)
+
+      // Send email notifications in the background (don't wait for it)
+      setTimeout(() => {
+        fetch('/api/send-session-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ sessionId: data?.id }),
+        }).catch(emailError => {
+          console.error('Background email notification error:', emailError)
+        })
+      }, 100) // Small delay to ensure UI updates first
 
     } catch (error: any) {
       setMessage(error.message)

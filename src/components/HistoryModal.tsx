@@ -95,7 +95,7 @@ export default function HistoryModal({ isOpen, onClose, darkMode, user }: Histor
           }}
           className="text-red-500 hover:text-red-700 ml-2"
         >
-          <X className="w-4 h-4" />
+          <X className="w-4 h-4" /> 
         </button>
       )}
     </div>
