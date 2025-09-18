@@ -73,7 +73,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
             {session.is_private && isCreator && (
               <button
                 onClick={() => {
-                  const shareUrl = `${window.location.origin}?private=${session.private_key}`
+                  const shareUrl = `${window.location.origin}/session/${session.id}?private=${session.private_key}`
                   navigator.clipboard.writeText(shareUrl)
                   alert('Share link copied to clipboard!')
                 }}

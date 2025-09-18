@@ -35,13 +35,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 })
     }
     
-    // Get ALL users to notify (excluding creator)
-    // First get all profile IDs except the creator
-    const { data: profiles, error: profilesError } = await supabase
-      .from('profiles')
-      .select('id, name, wants_notifications')
-      .neq('id', session.created_by)
-      .eq('wants_notifications', true)
+    // Determine who to notify based on session type
+    let profiles: any[] = []
+    let profilesError: any = null
+
+    if (session.is_private) {
+      // For private sessions, only notify invited users
+      if (session.invited_users && session.invited_users.length > 0) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, name, wants_notifications')
+          .in('id', session.invited_users)
+          .eq('wants_notifications', true)
+        
+        profiles = data || []
+        profilesError = error
+      }
+    } else {
+      // For public sessions, notify all users except creator
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name, wants_notifications')
+        .neq('id', session.created_by)
+        .eq('wants_notifications', true)
+      
+      profiles = data || []
+      profilesError = error
+    }
 
     // DEBUG: Also get all profiles to see what's in the database
     const { data: allProfiles, error: allProfilesError } = await supabase

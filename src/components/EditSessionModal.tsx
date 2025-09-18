@@ -22,6 +22,12 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  
+  // Private session states
+  const [isPrivate, setIsPrivate] = useState(false)
+  const [invitedUsers, setInvitedUsers] = useState<string[]>([])
+  const [allUsers, setAllUsers] = useState<any[]>([])
+  const [showUserSelector, setShowUserSelector] = useState(false)
 
   const locationOptions = [
     'Pick & Match Megabox',
@@ -30,6 +36,13 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
     'Bay Pickle',
     'Laguna Block 27'
   ]
+
+  // Load all users when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      loadAllUsers()
+    }
+  }, [isOpen])
 
   // Populate form when session changes
   useEffect(() => {
@@ -51,8 +64,27 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
       setMaxPlayers(session.max_players)
       setDuration(session.duration_hours || 1.0)
       setNotes(session.notes || '')
+      
+      // Set private session data
+      setIsPrivate(session.is_private || false)
+      setInvitedUsers(session.invited_users || [])
     }
   }, [session, isOpen])
+
+  const loadAllUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .order('name')
+      
+      if (!error && data) {
+        setAllUsers(data)
+      }
+    } catch (error) {
+      console.error('Error loading users:', error)
+    }
+  }
 
   // Cost calculation logic (same as create modal)
   const calculateCost = (dateTime: string, durationHours: number) => {
@@ -100,19 +132,25 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
       // Simply append seconds and timezone to make it a valid ISO string
       const isoDateTime = dateTime + ':00+08:00' // Hong Kong timezone (UTC+8)
       
+      const updateData: any = {
+        title,
+        date_time: isoDateTime,
+        location: location === 'Custom Location...' ? customLocation : location,
+        max_players: maxPlayers,
+        duration_hours: duration,
+        total_cost: totalCost,
+        is_peak_time: isPeak,
+        cost_per_person: totalCost / Math.max(1, session.rsvps?.filter(r => r.status === 'yes').length || 1),
+        notes: notes || null,
+      }
+
+      // Add private session fields
+      updateData.is_private = isPrivate
+      updateData.invited_users = invitedUsers
+
       const { error } = await supabase
         .from('sessions')
-        .update({
-          title,
-          date_time: isoDateTime,
-          location: location === 'Custom Location...' ? customLocation : location,
-          max_players: maxPlayers,
-          duration_hours: duration,
-          total_cost: totalCost,
-          is_peak_time: isPeak,
-          cost_per_person: totalCost / Math.max(1, session.rsvps?.filter(r => r.status === 'yes').length || 1),
-          notes: notes || null,
-        })
+        .update(updateData)
         .eq('id', session.id)
 
       if (error) throw error
@@ -232,7 +270,62 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
               required
             />
           </div>
-          
+
+          {/* Private Session Toggle */}
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="isPrivate"
+              checked={isPrivate}
+              onChange={(e) => setIsPrivate(e.target.checked)}
+              className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+            />
+            <label htmlFor="isPrivate" className="text-sm font-medium text-gray-700">
+              🔒 Private Session
+            </label>
+          </div>
+
+          {/* User Selection for Private Sessions */}
+          {isPrivate && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                👥 Invite Users
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowUserSelector(!showUserSelector)}
+                className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 bg-white"
+              >
+                {invitedUsers.length > 0 
+                  ? `Selected ${invitedUsers.length} users` 
+                  : 'Select users to invite'
+                }
+              </button>
+              
+              {showUserSelector && (
+                <div className="mt-2 max-h-40 overflow-y-auto border rounded-lg p-2 bg-gray-50">
+                  {allUsers.map((user) => (
+                    <label key={user.id} className="flex items-center space-x-2 p-1 hover:bg-gray-100 rounded">
+                      <input
+                        type="checkbox"
+                        checked={invitedUsers.includes(user.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setInvitedUsers([...invitedUsers, user.id])
+                          } else {
+                            setInvitedUsers(invitedUsers.filter(id => id !== user.id))
+                          }
+                        }}
+                        className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                      />
+                      <span className="text-sm text-gray-700">{user.name}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               <Clock className="w-4 h-4 inline mr-1" />
