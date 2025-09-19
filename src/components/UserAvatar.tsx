@@ -15,7 +15,7 @@ export default function UserAvatar({ profile, size = 'md', className = '' }: Use
     lg: 'w-12 h-12 text-base'
   }
 
-  const avatarUrl = profile?.avatar_url || profile?.google_avatar_url
+const avatarUrl = profile?.avatar_url || profile?.google_avatar_url || null
   const initials = profile?.name 
     ? profile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '?'
