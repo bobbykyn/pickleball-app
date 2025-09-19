@@ -17,10 +17,10 @@ const supabase = createClient(
 export async function POST(request: Request) {
   try {
     // Check if notifications are disabled
-    if (process.env.DISABLE_EMAIL_NOTIFICATIONS === 'true') {
-      console.log('Email notifications disabled via environment variable')
-      return NextResponse.json({ success: true, message: 'Notifications disabled' })
-    }
+    //if (process.env.DISABLE_EMAIL_NOTIFICATIONS === 'true') {
+    //  console.log('Email notifications disabled via environment variable')
+    //  return NextResponse.json({ success: true, message: 'Notifications disabled' })
+    //}
 
     const { sessionId } = await request.json()
     
