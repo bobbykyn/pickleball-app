@@ -50,6 +50,16 @@ export async function POST(request: Request) {
         
         profiles = data || []
         profilesError = error
+        
+        // After line 51, ADD this:
+        // Debug check - log what would be sent
+if (process.env.DISABLE_EMAIL_NOTIFICATIONS === 'true') {
+  console.log('📧 EMAIL DEBUG - Session:', session.title)
+  console.log('Is Private:', session.is_private)
+  console.log('Invited Users:', session.invited_users)
+  console.log('Found profiles to notify:', profiles)
+  // Don't return here - let it continue to gather users for debugging
+}
       }
     } else {
       // For public sessions, notify all users except creator
@@ -112,6 +122,22 @@ export async function POST(request: Request) {
       })
     }
     
+// Check if notifications are disabled and log debug info
+if (process.env.DISABLE_EMAIL_NOTIFICATIONS === 'true') {
+  console.log('📧 EMAIL DEBUG - Would send to:', users.map(u => u.email))
+  console.log('Session type:', session.is_private ? 'private' : 'public')
+  console.log('Invited users:', session.invited_users)
+  return NextResponse.json({ 
+    success: true, 
+    message: 'Notifications disabled - check Vercel logs',
+    debug: { 
+      wouldNotify: users.map(u => ({ email: u.email, name: u.name })),
+      sessionType: session.is_private ? 'private' : 'public',
+      invitedUsers: session.invited_users
+    }
+  })
+}
+
     // Send emails with rate limiting (2 requests per second max)
     for (let i = 0; i < users.length; i++) {
       const user = users[i]

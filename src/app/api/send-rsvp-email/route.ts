@@ -90,6 +90,18 @@ export async function POST(request: NextRequest) {
     const attendeeCount = (session.rsvps?.filter((r: any) => r.status === 'yes').length || 0) + 1
     const costPerPerson = (session.total_cost || 0) / attendeeCount
 
+// In send-rsvp-email/route.ts, after calculating uniqueRecipients (around line 90-95)
+if (process.env.DISABLE_EMAIL_NOTIFICATIONS === 'true') {
+  console.log('📧 RSVP DEBUG - Would notify:', uniqueRecipients)
+  console.log('New member:', newMemberName, 'joined:', session.title)
+  console.log('New cost per person: $', costPerPerson.toFixed(2))
+  return NextResponse.json({ 
+    success: true, 
+    message: 'RSVP notifications disabled - check logs',
+    debug: { recipients: uniqueRecipients, newMember: newMemberName }
+  })
+}
+
     // Send email with rate limiting
     console.log('Sending RSVP notifications to:', uniqueRecipients)
     
