@@ -47,14 +47,18 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
 
   return (
     <div className={`rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 border ${
-      darkMode 
-        ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' 
-        : 'bg-white border-gray-100'
+      session.is_private
+    ? darkMode 
+      ? 'bg-purple-900/20 border-purple-700/50' 
+      : 'bg-purple-50 border-purple-200'
+    : darkMode 
+      ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' 
+      : 'bg-white border-gray-100'
     }`}>
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <h3 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'} flex items-center gap-2`}>
-          {session.is_private && <span className="text-xs">🔒</span>}
+          {session.is_private && <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded">🔒 Private</span>}
           {session.title}
         </h3>
         <div className="flex items-center space-x-2">
