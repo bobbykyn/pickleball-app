@@ -2,6 +2,7 @@ import { Session } from '@/types'
 import { format } from 'date-fns'
 import { Calendar, MapPin, Users, Clock, Trash2, Edit } from 'lucide-react'
 import UserAvatar from './UserAvatar'
+import { Share2 } from 'lucide-react';
 
 interface SessionCardProps {
   session: Session
@@ -20,7 +21,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
   const canEdit = isCreator || isAdmin
   
   const yesRSVPs = session.rsvps?.filter(rsvp => rsvp.status === 'yes') || []
-  const maybeRSVPs = session.rsvps?.filter(rsvp => rsvp.status === 'maybe') || []
+  //const maybeRSVPs = session.rsvps?.filter(rsvp => rsvp.status === 'maybe') || []
   
   const handleDelete = async () => {
     if (!onDelete) return
@@ -31,10 +32,35 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
     }
   }
   
+  const shareToWhatsApp = () => {
+    const dateObj = new Date(session.date_time)
+    const sessionDate = dateObj.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    const timeStr = format(dateObj, 'h:mm a')
+    const attendees = session.rsvps?.filter(r => r.status === 'yes').length || 0
+    const perPerson = (session.total_cost ?? 0) / (attendees || 1)
+    
+    const message = encodeURIComponent(
+      `🎾 Pickleball Session!\n\n` +
+      `📅 ${sessionDate}\n` +
+      `⏰ ${timeStr}\n` +
+      `📍 ${session.location}\n` +
+      `💰 $${perPerson.toFixed(2)} HKD per person\n` +
+      `👥 ${attendees} players confirmed\n\n` +
+      `Join here: https://pickleball-app-1.vercel.app/`
+    );
+    
+    window.open(`https://wa.me/?text=${message}`, '_blank');
+  };
+
   const currentUserRSVP = session.rsvps?.find(rsvp => rsvp.user_id === currentUserId)
   const userRSVPStatus = currentUserRSVP?.status
   
-  const handleRSVP = (status: 'yes' | 'maybe' | 'no') => {
+  const handleRSVP = (status: 'yes' | 'no') => {
     if (!onRSVP || !currentUserId) return
     onRSVP(session.id, status)
   }
@@ -185,9 +211,9 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
             : 'bg-teal-100 text-teal-800'
         }`}>
           <span>Who's Playing:</span>
-          {maybeRSVPs.length > 0 && (
+          {/* {maybeRSVPs.length > 0 && (
             <span className="text-yellow-600">{maybeRSVPs.length} maybe</span>
-          )}
+          )} */}
         </div>
         {yesRSVPs.length > 0 ? (
           <div className="flex flex-wrap gap-4">
@@ -213,44 +239,45 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
       
       {/* Action Buttons */}
       {currentUserId && (
-        <div className="flex space-x-3">
-          <button 
-            onClick={() => handleRSVP('yes')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
-              userRSVPStatus === 'yes' 
-                ? 'bg-teal-700 text-white' 
-                : darkMode
-                  ? 'bg-teal-800 text-teal-200 hover:bg-teal-700'
-                  : 'bg-teal-100 text-teal-700 hover:bg-teal-200'
-            }`}
-          >
-            Join!
-          </button>
-          <button 
-            onClick={() => handleRSVP('maybe')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
-              userRSVPStatus === 'maybe' 
-                ? 'bg-yellow-500 text-white' 
-                : darkMode
-                  ? 'bg-yellow-800 text-yellow-200 hover:bg-yellow-700'
-                  : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-            }`}
-          >
-            Maybe
-          </button>
+        <div className="flex gap-3">
+        <button 
+          onClick={() => handleRSVP('yes')}
+          className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
+            userRSVPStatus === 'yes' 
+              ? 'bg-teal-700 text-white' 
+              : darkMode
+                ? 'bg-teal-800 text-teal-200 hover:bg-teal-700'
+                : 'bg-teal-100 text-teal-700 hover:bg-teal-200'
+          }`}
+        >
+          {userRSVPStatus === 'yes' ? '✓ Going' : 'Join!'}
+        </button>
+        
+        {userRSVPStatus === 'yes' && (
           <button 
             onClick={() => handleRSVP('no')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
-              userRSVPStatus === 'no' 
-                ? 'bg-gray-600 text-white' 
-                : darkMode
-                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+              darkMode
+                ? 'bg-red-800/30 text-red-300 hover:bg-red-800/50'
+                : 'bg-red-100 text-red-700 hover:bg-red-200'
             }`}
           >
-            Next Time!
+            Cancel
           </button>
-        </div>
+        )}
+      
+        <button
+          onClick={shareToWhatsApp}
+          className={`p-3 rounded-lg transition-colors ${
+            darkMode 
+              ? 'bg-green-800 text-green-200 hover:bg-green-700' 
+              : 'bg-green-100 text-green-700 hover:bg-green-200'
+          }`}
+          title="Share to WhatsApp"
+        >
+          <Share2 className="w-4 h-4" />
+        </button>
+      </div>
       )}
     </div>
   )
