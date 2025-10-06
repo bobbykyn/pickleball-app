@@ -99,35 +99,44 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
   }
 
   // Cost calculation logic
-  const calculateCost = (dateTime: string, durationHours: number) => {
-    if (!dateTime) return { totalCost: 0, isPeak: false }
-    
-    const sessionDate = new Date(dateTime)
-    const dayOfWeek = sessionDate.getDay() // 0 = Sunday, 6 = Saturday
-    const hour = sessionDate.getHours()
-    
-    // Peak time logic:
-    // Mon-Fri (1-5): 5pm-12am = peak
-    // Weekends (0,6): 10am-12am = peak
-    // Off-peak: Mon-Fri 10am-5pm
-    
-    let isPeak = false
-    
-    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-      // Weekdays: peak is 5pm-12am (17-23)
-      isPeak = hour >= 17 || hour <= 23
-    } else {
-      // Weekends: peak is 10am-12am (10-23)
-      isPeak = hour >= 10 && hour <= 23
-    }
-    
-    const hourlyRate = isPeak ? 390 : 290
-    const totalCost = hourlyRate * durationHours
-    
-    return { totalCost, isPeak: isPeak }
+const calculateCost = (dateTime: string, durationHours: number, location: string) => {
+  if (!dateTime) return { totalCost: 0, isPeak: false }
+  
+  // Check if it's Stackd Hopewell
+  if (location.toLowerCase().includes('stackd') && location.toLowerCase().includes('hopewell')) {
+    const baseCourtCost = 400 * durationHours; // $400 per hour
+    const perPersonCost = 100 * 1; // Default to 1 person when creating
+    const totalCost = baseCourtCost + perPersonCost;
+    return { totalCost, isPeak: false, isStackd: true }
   }
+  
+  // Megabox calculation
+  const sessionDate = new Date(dateTime)
+  const dayOfWeek = sessionDate.getDay() // 0 = Sunday, 6 = Saturday
+  const hour = sessionDate.getHours()
+  
+  // Peak time logic:
+  // Mon-Fri (1-5): 5pm-12am = peak
+  // Weekends (0,6): 10am-12am = peak
+  // Off-peak: Mon-Fri 10am-5pm
+  
+  let isPeak = false
+  
+  if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+    // Weekdays: peak is 5pm-12am (17-23)
+    isPeak = hour >= 17 || hour <= 23
+  } else {
+    // Weekends: peak is 10am-12am (10-23)
+    isPeak = hour >= 10 && hour <= 23
+  }
+  
+  const hourlyRate = isPeak ? 390 : 290
+  const totalCost = hourlyRate * durationHours
+  
+  return { totalCost, isPeak: isPeak, isStackd: false }
+}
 
-  const { totalCost, isPeak } = calculateCost(dateTime, duration)
+const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, location)
 
   if (!isOpen) return null
 
@@ -154,6 +163,7 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
         cost_per_person: totalCost,
         notes: notes || null,
         created_by: user.id
+        //venue_type: isStackd ? 'stackd_hopewell' : 'megabox'
       }
 
       // Add private session fields if it's private
@@ -378,14 +388,24 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
             />
           </div>
 
-          {/* Cost Preview - Only for Megabox */}
-          {location.toLowerCase().includes('megabox') && (
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <div className="text-sm text-gray-600">
-                <strong>Cost Preview:</strong> ${totalCost} total ({isPeak ? 'Peak' : 'Off-peak'} rate)
-              </div>
-            </div>
-          )}
+          {/* Cost Preview - For Megabox and Stackd */}
+{(location.toLowerCase().includes('megabox') || 
+  (location.toLowerCase().includes('stackd') && location.toLowerCase().includes('hopewell'))) && (
+  <div className="bg-gray-50 p-3 rounded-lg">
+    <div className="text-sm text-gray-600">
+      {isStackd ? (
+        <>
+          <strong>Cost Preview:</strong> ${totalCost} total<br/>
+          <span className="text-xs">Court: ${400 * duration} + Base per person: $100</span>
+        </>
+      ) : (
+        <>
+          <strong>Cost Preview:</strong> ${totalCost} total ({isPeak ? 'Peak' : 'Off-peak'} rate)
+        </>
+      )}
+    </div>
+  </div>
+)}
 
           <button
             type="submit"
