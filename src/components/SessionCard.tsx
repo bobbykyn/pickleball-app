@@ -86,6 +86,9 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
         <h3 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'} flex items-center gap-2`}>
           {session.is_private && <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded">🔒 Private</span>}
           {session.title}
+          <span className={`text-xs font-normal ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+    by {session.profiles?.[0]?.name || 'Unknown'}
+  </span>
         </h3>
         <div className="flex items-center space-x-2">
           <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
@@ -172,7 +175,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
       </div>
 
       {/* Cost Information - For Megabox and Stackd locations */}
-{(session.location.toLowerCase().includes('megabox') || 
+{!session.hide_costs && (session.location.toLowerCase().includes('megabox') || 
   (session.location.toLowerCase().includes('stackd') && session.location.toLowerCase().includes('hopewell'))) && (
   <div className={`flex items-center justify-between rounded-lg p-3 mt-2 ${
     darkMode ? 'bg-gray-700' : 'bg-gray-50'
@@ -240,6 +243,17 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                 </span>
               </div>
             ))}
+            
+{/* Show manual participants */}
+{session.manual_participants?.map((name: string, index: number) => (
+  <div key={`manual-${index}`} className={`flex items-center space-x-2 px-3 py-2 rounded-full ${
+    darkMode 
+      ? 'bg-gray-700 text-gray-300' 
+      : 'bg-gray-100 text-gray-700'
+  }`}>
+    <span className="text-sm font-medium">{name} (guest)</span>
+  </div>
+))}
           </div>
         ) : (
           <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>

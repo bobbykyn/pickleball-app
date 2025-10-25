@@ -56,7 +56,11 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  
+  const [preAddedUsers, setPreAddedUsers] = useState<string[]>([]) // For autocomplete user selection
+const [manualNames, setManualNames] = useState<string[]>([]) // For non-registered names
+const [userSearchTerm, setUserSearchTerm] = useState('')
+const [showUserDropdown, setShowUserDropdown] = useState(false)
+const [hideCosts, setHideCosts] = useState(false)
   // Private session states
   const [isPrivate, setIsPrivate] = useState(false)
   const [invitedUsers, setInvitedUsers] = useState<string[]>([])
@@ -93,6 +97,33 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
       console.error('Error loading users:', error)
     }
   }
+// Filter users based on search
+const filteredUsers = allUsers.filter(user => 
+  !preAddedUsers.includes(user.id) &&
+  user.name.toLowerCase().includes(userSearchTerm.toLowerCase())
+).slice(0, 5)
+
+const handleAddUser = (userId: string) => {
+  setPreAddedUsers([...preAddedUsers, userId])
+  setUserSearchTerm('')
+  setShowUserDropdown(false)
+}
+
+const handleAddManualName = () => {
+  if (userSearchTerm.trim() && !manualNames.includes(userSearchTerm.trim())) {
+    setManualNames([...manualNames, userSearchTerm.trim()])
+    setUserSearchTerm('')
+    setShowUserDropdown(false)
+  }
+}
+
+const handleRemovePreAddedUser = (userId: string) => {
+  setPreAddedUsers(preAddedUsers.filter(id => id !== userId))
+}
+
+const handleRemoveManualName = (name: string) => {
+  setManualNames(manualNames.filter(n => n !== name))
+}
 
   const generatePrivateKey = () => {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
@@ -162,7 +193,9 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
         is_peak_time: isPeak,
         cost_per_person: totalCost,
         notes: notes || null,
-        created_by: user.id
+        created_by: user.id,
+        hide_costs: hideCosts,
+  manual_participants: manualNames
         //venue_type: isStackd ? 'stackd_hopewell' : 'megabox'
       }
 
@@ -180,7 +213,25 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
         .single()
 
       if (error) throw error
-
+      
+      await supabase
+        .from('rsvps')
+        .insert({
+          session_id: data.id,
+          user_id: user.id,
+          status: 'yes'
+        })
+      
+      // Also add pre-added users as RSVPs
+      if (preAddedUsers.length > 0) {
+        const rsvpsToAdd = preAddedUsers.map(userId => ({
+          session_id: data.id,
+          user_id: userId,
+          status: 'yes'
+        }))
+        await supabase.from('rsvps').insert(rsvpsToAdd)
+      }
+       
       setMessage('Session created successfully!')
       setTimeout(() => {
         onClose()
@@ -193,6 +244,10 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
         setDuration(1.0)
         setNotes('')
         setMessage('')
+        setPreAddedUsers([]) 
+  setManualNames([]) 
+  setUserSearchTerm('') 
+  setHideCosts(false) 
       }, 1000)
 
       // Send email notifications in the background (don't wait for it)
@@ -300,7 +355,86 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
               required
             />
           </div>
-
+{/* Add Participants */}
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    <Users className="w-4 h-4 inline mr-1" />
+    Pre-add Participants (Optional)
+  </label>
+  
+  <div className="relative">
+    <input
+      type="text"
+      value={userSearchTerm}
+      onChange={(e) => {
+        setUserSearchTerm(e.target.value)
+        setShowUserDropdown(e.target.value.length > 0)
+      }}
+      onFocus={() => setShowUserDropdown(userSearchTerm.length > 0)}
+      placeholder="Type name to search or add..."
+      className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+    />
+    
+    {/* Dropdown */}
+    {showUserDropdown && (
+      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+        {filteredUsers.length > 0 ? (
+          filteredUsers.map(user => (
+            <button
+              key={user.id}
+              type="button"
+              onClick={() => handleAddUser(user.id)}
+              className="w-full px-4 py-2 text-left hover:bg-gray-100 text-gray-900"
+            >
+              {user.name}
+            </button>
+          ))
+        ) : (
+          <button
+            type="button"
+            onClick={handleAddManualName}
+            className="w-full px-4 py-2 text-left hover:bg-gray-100 text-gray-900"
+          >
+            Add "{userSearchTerm}" (not registered)
+          </button>
+        )}
+      </div>
+    )}
+  </div>
+  
+  {/* Selected Users */}
+  {(preAddedUsers.length > 0 || manualNames.length > 0) && (
+    <div className="mt-2 flex flex-wrap gap-2">
+      {preAddedUsers.map(userId => {
+        const user = allUsers.find(u => u.id === userId)
+        return (
+          <span key={userId} className="inline-flex items-center gap-1 px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm">
+            {user?.name}
+            <button
+              type="button"
+              onClick={() => handleRemovePreAddedUser(userId)}
+              className="hover:text-teal-900"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </span>
+        )
+      })}
+      {manualNames.map(name => (
+        <span key={name} className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
+          {name} (guest)
+          <button
+            type="button"
+            onClick={() => handleRemoveManualName(name)}
+            className="hover:text-gray-900"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </span>
+      ))}
+    </div>
+  )}
+</div>
           {/* Private Session Toggle */}
           <div className="flex items-center space-x-2">
             <input
@@ -314,7 +448,19 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
               🔒 Create Private Session
             </label>
           </div>
-
+{/* Hide Costs Toggle */}
+<div className="flex items-center space-x-2">
+  <input
+    type="checkbox"
+    id="hideCosts"
+    checked={hideCosts}
+    onChange={(e) => setHideCosts(e.target.checked)}
+    className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+  />
+  <label htmlFor="hideCosts" className="text-sm font-medium text-gray-700">
+    Hide Costs
+  </label>
+</div>
           {/* User Selection for Private Sessions */}
           {isPrivate && (
             <div>

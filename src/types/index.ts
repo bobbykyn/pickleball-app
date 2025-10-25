@@ -24,9 +24,13 @@ export interface Profile {
   created_at: string
   is_private?: boolean
   private_key?: string
-  profiles?: Profile
   rsvps?: RSVP[]
   invited_users?: string[]
+  hide_costs?: boolean
+  manual_participants?: string[]
+  profiles?: { 
+    name: string }[]
+    avatar_url?: string
   }
   
   export interface RSVP {
