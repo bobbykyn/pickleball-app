@@ -66,10 +66,10 @@ export default function Home() {
         .from('sessions')
         .select(`
           *,
-          profiles:created_by(name),
-          rsvps(
-            *,
-            profiles(name)
+          profiles!sessions_created_by_fkey(name, avatar_url),
+    rsvps(
+      *,
+      profiles(name, avatar_url)
           )
         `)
         .gte('date_time', new Date().toISOString())
@@ -316,7 +316,7 @@ export default function Home() {
     return (
       <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50'}`}>
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">🏓 雞仔 Pickle</h1>
+          <h1 className="text-4xl font-bold mb-4">PK  Pickle Kitchen</h1>
           <p className="text-xl text-gray-600">Loading...</p>
         </div>
       </div>
@@ -330,7 +330,7 @@ export default function Home() {
   <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
     <div className="flex justify-between items-center">
       <div>
-        <h1 className={`text-2xl md:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>🏓 雞仔 Pickle</h1>
+        <h1 className={`text-2xl md:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>PK  Pickle Kitchen</h1>
         <p className={`mt-1 text-sm md:text-base ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Let's Pickle Time!!</p>
         {user && (
           <p className={`mt-1 text-sm md:hidden ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -431,7 +431,7 @@ export default function Home() {
       ) : (
         <div className="text-center py-12">
           <h2 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            Join Your Pickleball Crew!
+            Join our Pickleball Crew!
           </h2>
           <p className={`mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             Sign up to see and join upcoming games

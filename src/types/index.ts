@@ -28,11 +28,11 @@ export interface Profile {
   invited_users?: string[]
   hide_costs?: boolean
   manual_participants?: string[]
-  profiles?: { 
-    name: string }[]
+  profiles?: {
+    name: string
     avatar_url?: string
   }
-  
+}
   export interface RSVP {
     id: string
     session_id: string

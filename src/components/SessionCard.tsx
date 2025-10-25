@@ -87,7 +87,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
           {session.is_private && <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded">🔒 Private</span>}
           {session.title}
           <span className={`text-xs font-normal ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-    by {session.profiles?.[0]?.name || 'Unknown'}
+    by {session.profiles?.name || 'Unknown'}
   </span>
         </h3>
         <div className="flex items-center space-x-2">

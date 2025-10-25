@@ -14,13 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Pickle Time',
+  title: 'Pickle Kitchen',
   description: 'Pickleball session booking',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Pickle Time'
+    title: 'Pickle Kitchen'
   }
 }
 
