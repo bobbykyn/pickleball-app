@@ -49,7 +49,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
       `📅 ${sessionDate}\n` +
       `⏰ ${timeStr}\n` +
       `📍 ${session.location}\n` +
-      `💰 $${perPerson.toFixed(2)} HKD per person\n` +
+      //`💰 $${perPerson.toFixed(2)} HKD per person\n` +
       `👥 ${attendees} players confirmed\n\n` +
       `Join here: https://pickleball-app-1.vercel.app/`
     );
@@ -83,14 +83,17 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
     }`}>
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
-        <h3 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'} flex items-center gap-2`}>
-          {session.is_private && <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded">🔒 Private</span>}
-          {session.title}
-          <span className={`text-xs font-normal ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-    by {session.profiles?.name || 'Unknown'}
-  </span>
-        </h3>
-        <div className="flex items-center space-x-2">
+  <div className="flex flex-col gap-1">
+    <h3 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'} flex items-center gap-2 flex-wrap`}>
+      {session.is_private && <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded">🔒 Private</span>}
+      {session.title}
+    </h3>
+    <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+      by {session.profiles?.name || 'Unknown'}
+    </span>
+  </div>
+  
+  <div className="flex items-center space-x-2">
           <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
             darkMode 
               ? 'bg-teal-900 text-teal-200' 

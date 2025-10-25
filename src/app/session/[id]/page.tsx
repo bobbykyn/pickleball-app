@@ -27,26 +27,27 @@ export default function SessionPage() {
     if (privateKey) {
       // Load private session
       fetch(`/api/get-private-session?key=${privateKey}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.session) {
-            setSession(data.session)
-          } else {
-            setError('Private session not found or invalid link')
-          }
+    .then(response => response.json())
+    .then(data => {
+      if (data.session) {
+        setSession(data.session)
+      } else {
+        setError('Private session not found or invalid link')
+      }
+      setLoading(false)
+    })
+    .catch(error => {
+      console.error('Error loading private session:', error)
+      setError('Error loading private session')
+      setLoading(false)
         })
-        .catch(error => {
-          console.error('Error loading private session:', error)
-          setError('Error loading private session')
-        })
-        .finally(() => setLoading(false))
     } else if (sessionId) {
       // Load regular session
       supabase
         .from('sessions')
         .select(`
           *,
-          profiles:created_by(name),
+          profiles!sessions_created_by_fkey(name, avatar_url),
           rsvps(
             *,
             profiles(name)
@@ -60,8 +61,8 @@ export default function SessionPage() {
           } else {
             setSession(data)
           }
+          setLoading(false)
         })
-        .finally(() => setLoading(false))
     } else {
       setError('No session specified')
       setLoading(false)
