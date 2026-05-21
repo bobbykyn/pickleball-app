@@ -15,7 +15,16 @@ interface SidebarProps {
   onOpenHistory?: () => void
 }
 
-export default function Sidebar({ isOpen, onClose, user, darkMode, onToggleDarkMode, onSignOut, onOpenProfile, onOpenHistory }: SidebarProps) {
+export default function Sidebar({ 
+  isOpen, 
+  onClose, 
+  user, 
+  darkMode, 
+  onToggleDarkMode, 
+  onSignOut, 
+  onOpenProfile, 
+  onOpenHistory 
+}: SidebarProps) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -25,126 +34,153 @@ export default function Sidebar({ isOpen, onClose, user, darkMode, onToggleDarkM
   if (!mounted) return null
 
   return (
-    <div 
-      className={`fixed top-0 right-0 h-full w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 border-l border-gray-200 ${
-        isOpen ? 'translate-x-0' : 'translate-x-full'
-      }`}
-    >
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Settings</h2>
-          <button 
-  onClick={onClose}
-  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
->
-  <X className="w-5 h-5 text-gray-700" />  // Add text-gray-700
-</button>
-        </div>
+    <>
+      {/* Backdrop overlay for closing sidebar by clicking outside */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 backdrop-blur-sm"
+          onClick={onClose}
+        />
+      )}
 
-        {user && (
-          <div className="mb-8 p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center space-x-3 mb-3">
-              <div className="w-10 h-10 bg-teal-700 rounded-full flex items-center justify-center">
-                <UserIcon className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">{user.email}</p>
-                <p className="text-sm text-gray-600">Logged in</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-4">
-          {/* Dark Mode Toggle */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center space-x-3">
-              {darkMode ? <Moon className="w-5 h-5 text-gray-600" /> : <Sun className="w-5 h-5 text-gray-600" />}
-              <span className="font-medium text-gray-900">Dark Mode</span>
-            </div>
-            <button
-              onClick={onToggleDarkMode}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                darkMode ? 'bg-teal-600' : 'bg-gray-300'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  darkMode ? 'translate-x-6' : 'translate-x-1'
+      <div 
+        className={`fixed top-0 right-0 h-full w-80 shadow-2xl transform transition-transform duration-300 ease-in-out z-50 border-l ${
+          darkMode 
+            ? 'bg-gray-800 border-gray-700 text-white' 
+            : 'bg-white border-gray-200 text-gray-900'
+        } ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <div className="p-6 h-full flex flex-col justify-between overflow-y-auto">
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Settings</h2>
+              <button 
+                onClick={onClose}
+                className={`p-2 rounded-lg transition-colors ${
+                  darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-700'
                 }`}
-              />
-            </button>
-          </div>
-
-          {/* Notifications */}
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center space-x-3 mb-3">
-              <Bell className="w-5 h-5 text-gray-600" />
-              <span className="font-medium text-gray-900">Notifications</span>
-            </div>
-            <div className="space-y-2 ml-8">
-              <label className="flex items-center space-x-2">
-                <input type="checkbox" className="rounded" defaultChecked />
-                <span className="text-sm text-gray-700">New sessions</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input type="checkbox" className="rounded" defaultChecked />
-                <span className="text-sm text-gray-700">RSVP updates</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input type="checkbox" className="rounded" />
-                <span className="text-sm text-gray-700">WhatsApp (coming soon)</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Profile Settings */}
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <UserIcon className="w-5 h-5 text-gray-600" />
-                <span className="font-medium text-gray-900">Profile Settings</span>
-              </div>
-              <button className="text-teal-700 text-sm font-medium hover:text-teal-800" onClick={onOpenProfile}>
-                Edit
+                title="Close"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-sm text-gray-600 mt-2 ml-8">Update name, phone, preferences</p>
+
+            {user && (
+              <div className={`mb-8 p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-teal-700 rounded-full flex items-center justify-center flex-shrink-0">
+                    <UserIcon className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className={`font-medium truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>{user.email}</p>
+                    <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Logged in</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {/* Dark Mode Toggle */}
+              <div className={`flex items-center justify-between p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                <div className="flex items-center space-x-3">
+                  {darkMode ? <Moon className="w-5 h-5 text-teal-400" /> : <Sun className="w-5 h-5 text-amber-500" />}
+                  <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Dark Mode</span>
+                </div>
+                <button
+                  onClick={onToggleDarkMode}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    darkMode ? 'bg-teal-600' : 'bg-gray-300'
+                  }`}
+                  aria-label="Toggle dark mode"
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      darkMode ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Notifications */}
+              <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                <div className="flex items-center space-x-3 mb-3">
+                  <Bell className={`w-5 h-5 ${darkMode ? 'text-teal-400' : 'text-gray-500'}`} />
+                  <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Notifications</span>
+                </div>
+                <div className="space-y-2 ml-8">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" className="rounded text-teal-600 focus:ring-teal-500" defaultChecked />
+                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>New sessions</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" className="rounded text-teal-600 focus:ring-teal-500" defaultChecked />
+                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>RSVP updates</span>
+                  </label>
+                  <label className="flex items-center space-x-2 opacity-50 cursor-not-allowed">
+                    <input type="checkbox" className="rounded" disabled />
+                    <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>WhatsApp (soon)</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Profile Settings */}
+              <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <UserIcon className={`w-5 h-5 ${darkMode ? 'text-teal-400' : 'text-gray-500'}`} />
+                    <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Profile Settings</span>
+                  </div>
+                  <button 
+                    className={`${darkMode ? 'text-teal-400 hover:text-teal-300' : 'text-teal-700 hover:text-teal-850'} text-sm font-medium`} 
+                    onClick={onOpenProfile}
+                  >
+                    Edit
+                  </button>
+                </div>
+                <p className={`text-xs mt-1 ml-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Update name, phone, preferences</p>
+              </div>
+
+              {/* Game History */}
+              <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                <button 
+                  onClick={onOpenHistory}
+                  className="w-full flex items-center justify-between"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Calendar className={`w-5 h-5 ${darkMode ? 'text-teal-400' : 'text-gray-500'}`} />
+                    <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Game History</span>
+                  </div>
+                  <span className={`${darkMode ? 'text-teal-400 hover:text-teal-300' : 'text-teal-700 hover:text-teal-850'} text-sm font-medium`}>View</span>
+                </button>
+                <p className={`text-xs mt-1 ml-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>View past games and attendance</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            {/* Sign Out Button at Bottom */}
+            <div className={`mt-6 pt-4 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <button
+                onClick={onSignOut}
+                className={`w-full flex items-center justify-center space-x-2 p-3 text-red-500 font-medium rounded-lg transition-colors ${
+                  darkMode ? 'hover:bg-red-950/20' : 'hover:bg-red-50'
+                }`}
+              >
+                <span>Sign Out</span>
+              </button>
+            </div>
+
+            <div className={`mt-4 pt-4 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <p className={`text-xs text-center ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                雞仔 Pickle v1.0<br />
+                🏓🏓🏓🏓🏓
+              </p>
+            </div>
           </div>
         </div>
-
-{/* Game History */}
-<div className="p-4 bg-gray-50 rounded-lg">
-  <button 
-    onClick={onOpenHistory}
-    className="w-full flex items-center justify-between"
-  >
-    <div className="flex items-center space-x-3">
-      <Calendar className="w-5 h-5 text-gray-600" />
-      <span className="font-medium text-gray-900">Game History</span>
-    </div>
-    <span className="text-teal-700 text-sm font-medium">View</span>
-  </button>
-  <p className="text-sm text-gray-600 mt-2 ml-8">View past games and attendance</p>
-</div>
-
-        {/* Sign Out Button at Bottom */}
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          <button
-            onClick={onSignOut}
-            className="w-full flex items-center justify-center space-x-2 p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-          >
-            <span>Sign Out</span>
-          </button>
-        </div>
-
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <p className="text-xs text-gray-500 text-center">
-          雞仔 Pickle   v1.0<br />
-            🏓🏓🏓🏓🏓
-          </p>
-        </div>
       </div>
-    </div>
+    </>
   )
-}          
+}

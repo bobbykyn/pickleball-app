@@ -127,6 +127,7 @@ if (process.env.DISABLE_EMAIL_NOTIFICATIONS === 'true') {
                 
                 <div style="margin: 15px 0;">
                   <strong>📅 When:</strong> ${new Date(session.date_time).toLocaleDateString('en-US', {
+                    timeZone: 'Asia/Hong_Kong',
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',

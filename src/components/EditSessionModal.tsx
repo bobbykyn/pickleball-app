@@ -60,7 +60,13 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
       const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`
       setDateTime(localDateTime)
       
-      setLocation(session.location)
+      if (locationOptions.includes(session.location)) {
+        setLocation(session.location)
+        setCustomLocation('')
+      } else {
+        setLocation('Custom Location...')
+        setCustomLocation(session.location)
+      }
       setMaxPlayers(session.max_players)
       setDuration(session.duration_hours || 1.0)
       setNotes(session.notes || '')
@@ -140,7 +146,7 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
         duration_hours: duration,
         total_cost: totalCost,
         is_peak_time: isPeak,
-        cost_per_person: totalCost / Math.max(1, session.rsvps?.filter(r => r.status === 'yes').length || 1),
+        cost_per_person: totalCost / Math.max(1, session.rsvps?.filter(r => r.status === 'yes')?.length || 1),
         notes: notes || null,
       }
 

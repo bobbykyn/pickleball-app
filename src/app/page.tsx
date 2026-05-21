@@ -281,30 +281,30 @@ export default function Home() {
         if (error) throw error
       }
 
-      // Send RSVP notification email
+      // Send RSVP notification email in the background (non-blocking)
       if (status === 'yes') {
-        try {
-          const response = await fetch('/api/send-rsvp-email', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-              sessionId, 
-              newMemberName: userName,
-              rsvpStatus: status
-            }),
-          })
-
+        fetch('/api/send-rsvp-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            sessionId, 
+            newMemberName: userName,
+            rsvpStatus: status
+          }),
+        })
+        .then(response => {
           if (!response.ok) {
             console.error('Failed to send RSVP notifications')
           }
-        } catch (emailError) {
+        })
+        .catch(emailError => {
           console.error('RSVP email error:', emailError)
-        }
+        })
       }
 
-      // Refresh sessions to show updated RSVPs
+      // Refresh sessions immediately to show updated RSVPs
       loadSessions()
     } catch (error) {
       console.error('Error updating RSVP:', error)
@@ -352,7 +352,8 @@ export default function Home() {
           </button>
           <button
             onClick={() => setShowSidebar(!showSidebar)}
-            className="md:hidden p-2"
+            className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            title="Settings"
           >
             <Settings className="w-5 h-5" />
           </button>
@@ -445,17 +446,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Settings Button - Fixed at bottom left */}
-      {/* Settings Button - Fixed at bottom left - Desktop only */}
-{user && (
-  <button
-    onClick={() => setShowSidebar(!showSidebar)}
-    className="hidden md:block fixed bottom-6 left-6 bg-teal-700 text-white p-4 rounded-full shadow-lg hover:bg-teal-800 transition-colors z-30"
-    title="Settings"
-  >
-    <Settings className="w-6 h-6" />
-  </button>
-)}
+
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       <CreateSessionModal 

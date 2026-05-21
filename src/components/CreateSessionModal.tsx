@@ -13,13 +13,22 @@ interface CreateSessionModalProps {
 export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, selectedDate }: CreateSessionModalProps) {
   const [customLocation, setCustomLocation] = useState('')
   
-    // Smart default date/time
+  const toLocalDateTimeString = (date: Date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${year}-${month}-${day}T${hours}:${minutes}`
+  }
+
+  // Smart default date/time
   const getDefaultDateTime = () => {
     const now = new Date()
     const currentYear = now.getFullYear()
     const currentMonth = now.getMonth()
 
-        // Use 2025 until Jan 1, 2026, then use 2026
+    // Use 2025 until Jan 1, 2026, then use 2026
     const defaultYear = (currentYear === 2025 && currentMonth === 11) ? 2026 : 2025
     
     // Set to next Friday at 6 PM as default
@@ -29,14 +38,14 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
     nextFriday.setDate(nextFriday.getDate() + daysUntilFriday)
     nextFriday.setHours(18, 0, 0, 0) // 6 PM
     
-    return nextFriday.toISOString().slice(0, 16) // Format for datetime-local input
+    return toLocalDateTimeString(nextFriday)
   }
 
   const getMinDateTime = () => {
     const now = new Date()
     now.setHours(now.getHours() + 1, 0, 0, 0) // Round up to next hour
-    return now.toISOString().slice(0, 16)
-  } 
+    return toLocalDateTimeString(now)
+  }
   
   const [title, setTitle] = useState('')
   const [dateTime, setDateTime] = useState(getDefaultDateTime())
@@ -79,7 +88,7 @@ const [hideCosts, setHideCosts] = useState(false)
     if (isOpen && selectedDate) {
       const selected = new Date(selectedDate)
       selected.setHours(18, 0, 0, 0) // Default to 6 PM
-      setDateTime(selected.toISOString().slice(0, 16))
+      setDateTime(toLocalDateTimeString(selected))
     }
   }, [isOpen, selectedDate])
 

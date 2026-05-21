@@ -151,7 +151,15 @@ if (process.env.DISABLE_EMAIL_NOTIFICATIONS === 'true') {
           html: `
             <h2>New session created!</h2>
             <p><strong>${session.title}</strong></p>
-            <p>📅 ${new Date(session.date_time).toLocaleString()}</p>
+            <p>📅 ${new Date(session.date_time).toLocaleString('en-US', {
+              timeZone: 'Asia/Hong_Kong',
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}</p>
             <p>📍 ${session.location}</p>
             <a href="https://pickleball-app-1.vercel.app">Join Now</a>
           `
