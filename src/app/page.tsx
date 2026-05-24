@@ -9,7 +9,7 @@ import CreateSessionModal from '@/components/CreateSessionModal'
 import EditSessionModal from '@/components/EditSessionModal'
 import ProfileModal from '@/components/ProfileModal'
 import CalendarView from '@/components/CalendarView'
-import { Session } from '@/types'
+import { Session, RSVP } from '@/types'
 import Sidebar from '../components/Sidebar'
 import { Settings } from 'lucide-react'
 import { format, addMonths } from 'date-fns'
@@ -35,7 +35,8 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [currentMonthOffset, setCurrentMonthOffset] = useState(0)
   const [showHistoryModal, setShowHistoryModal] = useState(false)
-  
+  const [rsvpLoading, setRsvpLoading] = useState<string | null>(null)
+
 
   // Load user profile
   const loadUserProfile = async () => {
@@ -228,87 +229,139 @@ export default function Home() {
     }
   }
 
-  const handleRSVP = async (sessionId: string, status: 'yes' | 'maybe' | 'no') => {
+  const handleRSVP = async (
+    sessionId: string,
+    status: 'yes' | 'maybe' | 'no',
+    opts: {
+      guestCount?: number
+      guestNames?: string[]
+      addedUsers?: Array<{ id: string; name: string; avatar_url?: string }>
+    } = {}
+  ) => {
     if (!user) return
-    
-    // Check max players limit for 'yes' RSVPs
-    if (status === 'yes') {
-      const session = sessions.find(s => s.id === sessionId)
-      const currentYesRSVPs = session?.rsvps?.filter(rsvp => rsvp.status === 'yes').length || 0
-      
-      if (currentYesRSVPs >= (session?.max_players || 8)) {
-        alert('Sorry, this session is full! Maximum players reached.')
+
+    const { guestCount = 0, guestNames = [], addedUsers = [] } = opts
+    const userName = userProfile?.name || 'Someone'
+
+    // Snapshot for rollback if DB sync fails
+    const prevSessions = sessions
+    const session = sessions.find(s => s.id === sessionId)
+
+    // Max players check including guests + added friends
+    if (status === 'yes' && session) {
+      const existingYes = session.rsvps?.filter(r => r.status === 'yes') || []
+      const existingGuestTotal = existingYes.reduce((sum, r) => sum + (r.guest_count || 0), 0)
+      const userAlreadyIn = existingYes.some(r => r.user_id === user.id)
+      const newAdds = addedUsers.filter(u => !existingYes.some(r => r.user_id === u.id)).length
+      const newPeople = (userAlreadyIn ? 0 : 1) + guestCount + newAdds
+      const total = existingYes.length + existingGuestTotal + newPeople
+      if (total > (session.max_players || 8)) {
+        alert(`Sorry, adding ${newPeople} would exceed max players (${session.max_players}).`)
         return
       }
     }
 
-    try {
-      // Check if user already has an RSVP
-      const { data: existingRSVP } = await supabase
-        .from('rsvps')
-        .select('id')
-        .eq('session_id', sessionId)
-        .eq('user_id', user.id)
-        .single()
+    // === OPTIMISTIC UI UPDATE ===
+    setSessions(prev => prev.map(s => {
+      if (s.id !== sessionId) return s
+      const removedIds = new Set<string>([user.id, ...addedUsers.map(u => u.id)])
+      const kept = (s.rsvps || []).filter(r => !removedIds.has(r.user_id))
+      const updates: RSVP[] = [...kept]
 
-      // Get user's name for notifications
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('name')
-        .eq('id', user.id)
-        .single()
-
-      const userName = profile?.name || 'Someone'
-
-      if (existingRSVP) {
-        // Update existing RSVP
-        const { error } = await supabase
-          .from('rsvps')
-          .update({ status })
-          .eq('id', existingRSVP.id)
-
-        if (error) throw error
-      } else {
-        // Create new RSVP
-        const { error } = await supabase
-          .from('rsvps')
-          .insert({
+      if (status === 'yes') {
+        updates.push({
+          id: `tmp-${user.id}`,
+          session_id: sessionId,
+          user_id: user.id,
+          status: 'yes',
+          created_at: new Date().toISOString(),
+          guest_count: guestCount,
+          guest_names: guestNames,
+          profiles: { name: userName } as any,
+        })
+        addedUsers.forEach(u => {
+          updates.push({
+            id: `tmp-${u.id}`,
             session_id: sessionId,
-            user_id: user.id,
-            status
+            user_id: u.id,
+            status: 'yes',
+            created_at: new Date().toISOString(),
+            guest_count: 0,
+            guest_names: [],
+            profiles: { name: u.name, avatar_url: u.avatar_url } as any,
           })
-
-        if (error) throw error
+        })
       }
 
-      // Send RSVP notification email in the background (non-blocking)
+      return { ...s, rsvps: updates }
+    }))
+
+    setRsvpLoading(sessionId)
+
+    // === BACKGROUND SYNC ===
+    try {
+      const { error: upsertErr } = await supabase
+        .from('rsvps')
+        .upsert(
+          {
+            session_id: sessionId,
+            user_id: user.id,
+            status,
+            guest_count: status === 'yes' ? guestCount : 0,
+            guest_names: status === 'yes' ? guestNames : [],
+          },
+          { onConflict: 'session_id,user_id' }
+        )
+      if (upsertErr) throw upsertErr
+
+      if (status === 'yes' && addedUsers.length > 0) {
+        const rows = addedUsers.map(u => ({
+          session_id: sessionId,
+          user_id: u.id,
+          status: 'yes' as const,
+          guest_count: 0,
+          guest_names: [] as string[],
+        }))
+        const { error: addErr } = await supabase
+          .from('rsvps')
+          .upsert(rows, { onConflict: 'session_id,user_id' })
+        if (addErr) throw addErr
+      }
+
+      // Reconcile (replaces temp IDs with real ones, picks up any cross-user changes)
+      loadSessions()
+
+      // Background: notify added friends (session-creation-style)
+      if (status === 'yes' && addedUsers.length > 0) {
+        fetch('/api/send-added-to-session-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            addedUserIds: addedUsers.map(u => u.id),
+            addedByName: userName,
+          }),
+        }).catch(e => console.error('Added-friend email error:', e))
+      }
+
+      // Background: existing RSVP notification flow (creator + other 'yes' members)
       if (status === 'yes') {
         fetch('/api/send-rsvp-email', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            sessionId, 
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
             newMemberName: userName,
-            rsvpStatus: status
+            rsvpStatus: status,
           }),
-        })
-        .then(response => {
-          if (!response.ok) {
-            console.error('Failed to send RSVP notifications')
-          }
-        })
-        .catch(emailError => {
-          console.error('RSVP email error:', emailError)
-        })
+        }).catch(e => console.error('RSVP email error:', e))
       }
-
-      // Refresh sessions immediately to show updated RSVPs
-      loadSessions()
     } catch (error) {
       console.error('Error updating RSVP:', error)
+      setSessions(prevSessions)
       alert('Failed to update RSVP. Please try again.')
+    } finally {
+      setRsvpLoading(null)
     }
   }
 
@@ -407,14 +460,15 @@ export default function Home() {
               {sessions.length > 0 ? (
                 <div className="space-y-4 md:space-y-6">
                   {sessions.map((session) => (
-                    <SessionCard 
-                      key={session.id} 
-                      session={session} 
+                    <SessionCard
+                      key={session.id}
+                      session={session}
                       currentUserId={user?.id}
                       currentUserEmail={user?.email}
                       onDelete={handleDeleteSession}
                       onEdit={handleEditSession}
                       onRSVP={handleRSVP}
+                      rsvpLoading={rsvpLoading === session.id}
                       darkMode={darkMode}
                     />
                   ))}

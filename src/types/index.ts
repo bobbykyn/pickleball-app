@@ -39,5 +39,7 @@ export interface Profile {
     user_id: string
     status: 'yes' | 'maybe' | 'no'
     created_at: string
+    guest_count?: number
+    guest_names?: string[]
     profiles?: Profile
   }
