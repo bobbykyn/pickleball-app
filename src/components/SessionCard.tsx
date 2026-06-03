@@ -37,7 +37,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
     if (allUsers.length > 0) return
     supabase
       .from('profiles')
-      .select('id, name, avatar_url')
+      .select('id, name, avatar_url, google_avatar_url')
       .order('name')
       .then(({ data }) => {
         if (data) setAllUsers(data as any)
@@ -79,8 +79,9 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
       day: 'numeric'
     });
     const timeStr = format(dateObj, 'h:mm a')
-    const attendees = session.rsvps?.filter(r => r.status === 'yes').length || 0
-    const perPerson = (session.total_cost ?? 0) / (attendees || 1)
+    const yesRSVPsCount = session.rsvps?.filter(r => r.status === 'yes').length || 0
+    const totalGuestSeatsCount = session.rsvps?.reduce((sum, r) => sum + (r.status === 'yes' ? (r.guest_count || 0) : 0), 0) || 0
+    const attendees = yesRSVPsCount + totalGuestSeatsCount
     
     const message = encodeURIComponent(
       `🎾 Pickleball Session!\n\n` +
@@ -97,6 +98,16 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
 
   const currentUserRSVP = session.rsvps?.find(rsvp => rsvp.user_id === currentUserId)
   const userRSVPStatus = currentUserRSVP?.status
+
+  const openEditGuests = () => {
+    if (currentUserRSVP) {
+      const names = currentUserRSVP.guest_names || []
+      const totalCount = currentUserRSVP.guest_count || 0
+      setGuestNames(names)
+      setUnnamedGuestCount(Math.max(0, totalCount - names.length))
+    }
+    setJoinMode('plusmore')
+  }
   
   const handleRSVP = (status: 'yes' | 'no', opts?: { guestCount?: number; guestNames?: string[]; addedUsers?: AddedUser[] }) => {
     if (!onRSVP || !currentUserId) return
@@ -153,7 +164,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
               : 'bg-teal-100 text-teal-800'
           }`}>
             <Users className="w-4 h-4" />
-            <span>{yesRSVPs.length}/{session.max_players}</span>
+            <span>{yesRSVPs.length + totalGuestSeats}/{session.max_players}</span>
           </div>
           
           {/* Action buttons for creators/admin */}
@@ -230,41 +241,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
         </div>
       </div>
 
-      {/* Cost Information - For Megabox and Stackd locations */}
-{!session.hide_costs && (session.location.toLowerCase().includes('megabox') || 
-  (session.location.toLowerCase().includes('stackd') && session.location.toLowerCase().includes('hopewell'))) && (
-  <div className={`flex items-center justify-between rounded-lg p-3 mt-2 ${
-    darkMode ? 'bg-gray-700' : 'bg-gray-50'
-  }`}>
-    <div className="flex items-center space-x-4">
-      <div className="text-center">
-        <div className={`text-2xl font-bold ${darkMode ? 'text-teal-400' : 'text-teal-700'}`}>
-          ${costPerPerson.toFixed(2)}
-        </div>
-        <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>per person</div>
-      </div>
-      <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-        {session.location.toLowerCase().includes('megabox') ? (
-          <>
-            <div>{durationHours}h • {isPeakTime ? 'Peak' : 'Off-peak'} rate</div>
-            <div className="text-xs">Total: ${totalCost} ÷ {attendeeCount} {attendeeCount === 1 ? 'person' : 'people'}</div>
-          </>
-        ) : (
-          <>
-            <div>{durationHours}h • Stackd Hopewell</div>
-            <div className="text-xs">Court: ${400 * durationHours} + Players: ${100 * attendeeCount}</div>
-            <div className="text-xs">Total: ${totalCost} ÷ {attendeeCount} {attendeeCount === 1 ? 'person' : 'people'}</div>
-          </>
-        )}
-      </div>
-    </div>
-    {attendeeCount > 1 && (
-      <div className={`text-sm font-bold ${darkMode ? 'text-teal-400' : 'text-teal-700'}`}>
-        OJ!!
-      </div>
-    )}
-  </div>
-)}
+
       
       {/* Notes */}
       {session.notes && (
@@ -341,19 +318,30 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
             <button
               disabled={rsvpLoading}
               onClick={() => {
-                if (userRSVPStatus === 'yes') return
-                setJoinMode(prev => (prev === 'closed' ? 'choose' : 'closed'))
+                if (userRSVPStatus === 'yes') {
+                  if (joinMode === 'closed') {
+                    openEditGuests()
+                  } else {
+                    resetPicker()
+                  }
+                } else {
+                  setJoinMode(prev => (prev === 'closed' ? 'choose' : 'closed'))
+                }
               }}
               className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-60 ${
                 userRSVPStatus === 'yes'
-                  ? 'bg-teal-700 text-white cursor-default'
+                  ? (joinMode === 'closed'
+                      ? 'bg-teal-700 text-white hover:bg-teal-800 cursor-pointer'
+                      : 'bg-gray-600 text-white hover:bg-gray-700 cursor-pointer')
                   : darkMode
                     ? 'bg-teal-800 text-teal-200 hover:bg-teal-700'
                     : 'bg-teal-100 text-teal-700 hover:bg-teal-200'
               }`}
             >
               {rsvpLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {userRSVPStatus === 'yes' ? '✓ Going' : (joinMode === 'closed' ? 'Join!' : 'Close')}
+              {userRSVPStatus === 'yes'
+                ? (joinMode === 'closed' ? '✓ Going (Edit Guests)' : 'Close Edit')
+                : (joinMode === 'closed' ? 'Join!' : 'Close')}
             </button>
 
             {userRSVPStatus === 'yes' && (
@@ -414,7 +402,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
           )}
 
           {/* Picker panel (+1 or +more) */}
-          {(joinMode === 'plus1' || joinMode === 'plusmore') && userRSVPStatus !== 'yes' && (() => {
+          {(joinMode === 'plus1' || joinMode === 'plusmore') && (() => {
             const cap = joinMode === 'plus1' ? 1 : Infinity
             const totalAdded = picked.length + guestNames.length + unnamedGuestCount
             const atCap = totalAdded >= cap
@@ -526,7 +514,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                   className="w-full py-2 px-3 rounded-lg font-medium text-sm bg-teal-700 text-white hover:bg-teal-800 disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {rsvpLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Confirm Join {totalAdded > 0 ? `(+${totalAdded})` : ''}
+                  {userRSVPStatus === 'yes' ? 'Update Guests' : 'Confirm Join'} {totalAdded > 0 ? `(+${totalAdded})` : ''}
                 </button>
               </div>
             )

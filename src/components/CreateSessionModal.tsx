@@ -457,19 +457,7 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
               🔒 Create Private Session
             </label>
           </div>
-{/* Hide Costs Toggle */}
-<div className="flex items-center space-x-2">
-  <input
-    type="checkbox"
-    id="hideCosts"
-    checked={hideCosts}
-    onChange={(e) => setHideCosts(e.target.checked)}
-    className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
-  />
-  <label htmlFor="hideCosts" className="text-sm font-medium text-gray-700">
-    Hide Costs
-  </label>
-</div>
+
           {/* User Selection for Private Sessions */}
           {isPrivate && (
             <div>
@@ -543,24 +531,7 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
             />
           </div>
 
-          {/* Cost Preview - For Megabox and Stackd */}
-{(location.toLowerCase().includes('megabox') || 
-  (location.toLowerCase().includes('stackd') && location.toLowerCase().includes('hopewell'))) && (
-  <div className="bg-gray-50 p-3 rounded-lg">
-    <div className="text-sm text-gray-600">
-      {isStackd ? (
-        <>
-          <strong>Cost Preview:</strong> ${totalCost} total<br/>
-          <span className="text-xs">Court: ${400 * duration} + Base per person: $100</span>
-        </>
-      ) : (
-        <>
-          <strong>Cost Preview:</strong> ${totalCost} total ({isPeak ? 'Peak' : 'Off-peak'} rate)
-        </>
-      )}
-    </div>
-  </div>
-)}
+
 
           <button
             type="submit"

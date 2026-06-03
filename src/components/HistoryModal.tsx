@@ -32,10 +32,10 @@ export default function HistoryModal({ isOpen, onClose, darkMode, user }: Histor
         .from('sessions')
         .select(`
           *,
-          profiles:created_by(name),
+          profiles:created_by(name, avatar_url, google_avatar_url),
           rsvps(
             *,
-            profiles(name)
+            profiles(name, avatar_url, google_avatar_url)
           )
         `)
         .lt('date_time', now)  // Only past sessions
@@ -94,7 +94,12 @@ export default function HistoryModal({ isOpen, onClose, darkMode, user }: Histor
           </div>
           <div className="flex items-center">
             <Users className="w-4 h-4 mr-2" />
-            {session.rsvps?.filter(r => r.status === 'yes').length || 0} players attended
+            {(() => {
+              const yesCount = session.rsvps?.filter(r => r.status === 'yes').length || 0
+              const guestCount = session.rsvps?.reduce((sum, r) => sum + (r.status === 'yes' ? (r.guest_count || 0) : 0), 0) || 0
+              const total = yesCount + guestCount
+              return `${total} player${total === 1 ? '' : 's'} attended`
+            })()}
           </div>
         </div>
       </div>

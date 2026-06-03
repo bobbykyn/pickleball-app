@@ -364,14 +364,7 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
             />
           </div>
 
-          {/* Cost Preview - Only for Megabox */}
-          {location.toLowerCase().includes('megabox') && (
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <div className="text-sm text-gray-600">
-                <strong>Cost Preview:</strong> ${totalCost} total ({isPeak ? 'Peak' : 'Off-peak'} rate)
-              </div>
-            </div>
-          )}
+
 
           <button
             type="submit"

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { X, User, Phone } from 'lucide-react'
 import { User as AuthUser } from '@supabase/supabase-js'
+import UserAvatar from './UserAvatar'
 
 interface ProfileModalProps {
   isOpen: boolean
@@ -15,6 +16,8 @@ interface ProfileModalProps {
 export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }: ProfileModalProps) {
   const [displayName, setDisplayName] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [googleAvatarUrl, setGoogleAvatarUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -31,7 +34,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('name, phone')
+        .select('name, phone, avatar_url, google_avatar_url')
         .eq('id', user.id)
         .single()
 
@@ -43,10 +46,60 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
       if (data) {
         setDisplayName(data.name || '')
         setPhoneNumber(data.phone || '')
+        setAvatarUrl(data.avatar_url || null)
+        setGoogleAvatarUrl(data.google_avatar_url || null)
       }
     } catch (error) {
       console.error('Error loading profile:', error)
     }
+  }
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const max_size = 128
+        let width = img.width
+        let height = img.height
+
+        const size = Math.min(width, height)
+        canvas.width = max_size
+        canvas.height = max_size
+
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          ctx.drawImage(
+            img,
+            (width - size) / 2,
+            (height - size) / 2,
+            size,
+            size,
+            0,
+            0,
+            max_size,
+            max_size
+          )
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+          setAvatarUrl(dataUrl)
+        }
+      }
+      img.src = event.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleRemoveAvatar = () => {
+    setAvatarUrl(null)
   }
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
@@ -71,6 +124,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
           .update({
             name: displayName || null,
             phone: phoneNumber || null,
+            avatar_url: avatarUrl,
             updated_at: new Date().toISOString()
           })
           .eq('id', user.id)
@@ -84,7 +138,9 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
             id: user.id,
             email: user.email,
             name: displayName || null,
-            phone: phoneNumber || null
+            phone: phoneNumber || null,
+            avatar_url: avatarUrl,
+            google_avatar_url: null
           })
 
         if (error) throw error
@@ -118,6 +174,45 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
         </div>
 
         <form onSubmit={handleUpdateProfile} className="space-y-4">
+          {/* Avatar Section */}
+          <div className="flex flex-col items-center space-y-3 pb-4 border-b border-gray-100">
+            <div className="relative">
+              <UserAvatar 
+                profile={{ 
+                  name: displayName || user?.email || 'User', 
+                  avatar_url: avatarUrl, 
+                  google_avatar_url: googleAvatarUrl 
+                }} 
+                size="lg" 
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <label className="cursor-pointer bg-teal-50 hover:bg-teal-100 text-teal-700 px-3 py-1.5 rounded-lg text-xs font-semibold border border-teal-200 transition-colors">
+                <span>Upload Photo</span>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleAvatarChange} 
+                />
+              </label>
+              
+              {avatarUrl && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  className="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-200 transition-colors"
+                >
+                  Remove Custom
+                </button>
+              )}
+            </div>
+            <p className="text-[10px] text-gray-400 text-center">
+              Supports JPEG/PNG. Compressed automatically to save space.
+            </p>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               <User className="w-4 h-4 inline mr-1" />

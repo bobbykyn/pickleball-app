@@ -26,10 +26,10 @@ export async function GET(request: NextRequest) {
       .from('sessions')
       .select(`
         *,
-        profiles:created_by(name),
+        profiles:created_by(name, avatar_url, google_avatar_url),
         rsvps(
           *,
-          profiles(name)
+          profiles(name, avatar_url, google_avatar_url)
         )
       `)
       .eq('private_key', privateKey)

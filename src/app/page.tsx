@@ -45,11 +45,48 @@ export default function Home() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('name, phone')
+        .select('name, phone, avatar_url, google_avatar_url')
         .eq('id', user.id)
         .single()
 
-      if (!error && data) {
+      if (error && error.code === 'PGRST116') {
+        // Profile doesn't exist, let's create it! (Useful for Google OAuth sign-in)
+        const googleAvatar = user.user_metadata?.avatar_url || null
+        const newProfile = {
+          id: user.id,
+          email: user.email,
+          name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Someone',
+          phone: null,
+          wants_notifications: true,
+          wants_rsvp_updates: false,
+          google_avatar_url: googleAvatar,
+          avatar_url: null,
+        }
+        const { data: insertedData, error: insertError } = await supabase
+          .from('profiles')
+          .insert(newProfile)
+          .select()
+          .single()
+
+        if (!insertError && insertedData) {
+          setUserProfile(insertedData)
+        }
+      } else if (!error && data) {
+        // Sync google avatar if it has changed
+        const googleAvatar = user.user_metadata?.avatar_url || null
+        if (data.google_avatar_url !== googleAvatar) {
+          const { data: updatedData } = await supabase
+            .from('profiles')
+            .update({ google_avatar_url: googleAvatar })
+            .eq('id', user.id)
+            .select()
+            .single()
+          
+          if (updatedData) {
+            setUserProfile(updatedData)
+            return
+          }
+        }
         setUserProfile(data)
       }
     } catch (error) {
@@ -67,10 +104,10 @@ export default function Home() {
         .from('sessions')
         .select(`
           *,
-          profiles!sessions_created_by_fkey(name, avatar_url),
-    rsvps(
-      *,
-      profiles(name, avatar_url)
+          profiles!sessions_created_by_fkey(name, avatar_url, google_avatar_url),
+          rsvps(
+            *,
+            profiles(name, avatar_url, google_avatar_url)
           )
         `)
         .gte('date_time', new Date().toISOString())
@@ -250,13 +287,16 @@ export default function Home() {
     // Max players check including guests + added friends
     if (status === 'yes' && session) {
       const existingYes = session.rsvps?.filter(r => r.status === 'yes') || []
-      const existingGuestTotal = existingYes.reduce((sum, r) => sum + (r.guest_count || 0), 0)
-      const userAlreadyIn = existingYes.some(r => r.user_id === user.id)
-      const newAdds = addedUsers.filter(u => !existingYes.some(r => r.user_id === u.id)).length
-      const newPeople = (userAlreadyIn ? 0 : 1) + guestCount + newAdds
-      const total = existingYes.length + existingGuestTotal + newPeople
-      if (total > (session.max_players || 8)) {
-        alert(`Sorry, adding ${newPeople} would exceed max players (${session.max_players}).`)
+      const addedUserIds = new Set(addedUsers.map(u => u.id))
+      const otherRSVPs = existingYes.filter(r => r.user_id !== user.id && !addedUserIds.has(r.user_id))
+      const otherGuestsCount = otherRSVPs.reduce((sum, r) => sum + (r.guest_count || 0), 0)
+      const futureTotal = otherRSVPs.length + otherGuestsCount + 1 + guestCount + addedUsers.length
+
+      if (futureTotal > (session.max_players || 8)) {
+        const userRSVP = existingYes.find(r => r.user_id === user.id)
+        const userPrevTotal = 1 + (userRSVP?.guest_count || 0)
+        const spotsRequested = (1 + guestCount + addedUsers.length) - (userRSVP ? userPrevTotal : 0)
+        alert(`Sorry, adding ${spotsRequested} more player(s) would exceed max players (${session.max_players}).`)
         return
       }
     }
@@ -277,7 +317,11 @@ export default function Home() {
           created_at: new Date().toISOString(),
           guest_count: guestCount,
           guest_names: guestNames,
-          profiles: { name: userName } as any,
+          profiles: { 
+            name: userName, 
+            avatar_url: userProfile?.avatar_url, 
+            google_avatar_url: userProfile?.google_avatar_url 
+          } as any,
         })
         addedUsers.forEach(u => {
           updates.push({

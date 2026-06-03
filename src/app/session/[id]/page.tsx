@@ -47,10 +47,10 @@ export default function SessionPage() {
         .from('sessions')
         .select(`
           *,
-          profiles!sessions_created_by_fkey(name, avatar_url),
+          profiles!sessions_created_by_fkey(name, avatar_url, google_avatar_url),
           rsvps(
             *,
-            profiles(name)
+            profiles(name, avatar_url, google_avatar_url)
           )
         `)
         .eq('id', sessionId)
