@@ -2,20 +2,31 @@ import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!,
-  {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
+// Lazy init so env vars aren't required at build time (page-data collection).
+export const dynamic = 'force-dynamic'
+
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY)
+}
+
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      }
     }
-  }
-)
+  )
+}
 
 export async function POST(request: Request) {
   try {
+    const resend = getResend()
+    const supabase = getSupabase()
+
     // Check if notifications are disabled
     //if (process.env.DISABLE_EMAIL_NOTIFICATIONS === 'true') {
     //  console.log('Email notifications disabled via environment variable')
