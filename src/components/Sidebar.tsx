@@ -1,7 +1,7 @@
 'use client'
 
 import { User } from '@supabase/supabase-js'
-import { X, User as UserIcon, Bell, Moon, Sun, Calendar } from 'lucide-react'
+import { X, User as UserIcon, Bell, Moon, Sun, Calendar, BarChart3 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 interface SidebarProps {
@@ -13,6 +13,7 @@ interface SidebarProps {
   onSignOut: () => void
   onOpenProfile: () => void
   onOpenHistory?: () => void
+  onOpenStats?: () => void
 }
 
 export default function Sidebar({ 
@@ -22,8 +23,9 @@ export default function Sidebar({
   darkMode, 
   onToggleDarkMode, 
   onSignOut, 
-  onOpenProfile, 
-  onOpenHistory 
+  onOpenProfile,
+  onOpenHistory,
+  onOpenStats
 }: SidebarProps) {
   const [mounted, setMounted] = useState(false)
 
@@ -70,7 +72,7 @@ export default function Sidebar({
             {user && (
               <div className={`mb-8 p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-teal-700 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-brand-primary rounded-full flex items-center justify-center flex-shrink-0">
                     <UserIcon className="w-5 h-5 text-white" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -85,13 +87,13 @@ export default function Sidebar({
               {/* Dark Mode Toggle */}
               <div className={`flex items-center justify-between p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
                 <div className="flex items-center space-x-3">
-                  {darkMode ? <Moon className="w-5 h-5 text-teal-400" /> : <Sun className="w-5 h-5 text-amber-500" />}
+                  {darkMode ? <Moon className="w-5 h-5 text-brand-primary" /> : <Sun className="w-5 h-5 text-amber-500" />}
                   <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Dark Mode</span>
                 </div>
                 <button
                   onClick={onToggleDarkMode}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    darkMode ? 'bg-teal-600' : 'bg-gray-300'
+                    darkMode ? 'bg-brand-primary' : 'bg-gray-300'
                   }`}
                   aria-label="Toggle dark mode"
                 >
@@ -106,16 +108,16 @@ export default function Sidebar({
               {/* Notifications */}
               <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
                 <div className="flex items-center space-x-3 mb-3">
-                  <Bell className={`w-5 h-5 ${darkMode ? 'text-teal-400' : 'text-gray-500'}`} />
+                  <Bell className={`w-5 h-5 ${darkMode ? 'text-brand-primary' : 'text-gray-500'}`} />
                   <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Notifications</span>
                 </div>
                 <div className="space-y-2 ml-8">
                   <label className="flex items-center space-x-2 cursor-pointer">
-                    <input type="checkbox" className="rounded text-teal-600 focus:ring-teal-500" defaultChecked />
+                    <input type="checkbox" className="rounded text-brand-primary focus:ring-brand-primary" defaultChecked />
                     <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>New sessions</span>
                   </label>
                   <label className="flex items-center space-x-2 cursor-pointer">
-                    <input type="checkbox" className="rounded text-teal-600 focus:ring-teal-500" defaultChecked />
+                    <input type="checkbox" className="rounded text-brand-primary focus:ring-brand-primary" defaultChecked />
                     <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>RSVP updates</span>
                   </label>
                   <label className="flex items-center space-x-2 opacity-50 cursor-not-allowed">
@@ -129,11 +131,11 @@ export default function Sidebar({
               <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <UserIcon className={`w-5 h-5 ${darkMode ? 'text-teal-400' : 'text-gray-500'}`} />
+                    <UserIcon className={`w-5 h-5 ${darkMode ? 'text-brand-primary' : 'text-gray-500'}`} />
                     <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Profile Settings</span>
                   </div>
                   <button 
-                    className={`${darkMode ? 'text-teal-400 hover:text-teal-300' : 'text-teal-700 hover:text-teal-850'} text-sm font-medium`} 
+                    className={`${darkMode ? 'text-brand-primary hover:text-brand-primary/80' : 'text-brand-primary hover:text-brand-primary/80'} text-sm font-medium`} 
                     onClick={onOpenProfile}
                   >
                     Edit
@@ -149,12 +151,27 @@ export default function Sidebar({
                   className="w-full flex items-center justify-between"
                 >
                   <div className="flex items-center space-x-3">
-                    <Calendar className={`w-5 h-5 ${darkMode ? 'text-teal-400' : 'text-gray-500'}`} />
+                    <Calendar className={`w-5 h-5 ${darkMode ? 'text-brand-primary' : 'text-gray-500'}`} />
                     <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Game History</span>
                   </div>
-                  <span className={`${darkMode ? 'text-teal-400 hover:text-teal-300' : 'text-teal-700 hover:text-teal-850'} text-sm font-medium`}>View</span>
+                  <span className={`${darkMode ? 'text-brand-primary hover:text-brand-primary/80' : 'text-brand-primary hover:text-brand-primary/80'} text-sm font-medium`}>View</span>
                 </button>
                 <p className={`text-xs mt-1 ml-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>View past games and attendance</p>
+              </div>
+
+              {/* My Stats */}
+              <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                <button
+                  onClick={onOpenStats}
+                  className="w-full flex items-center justify-between"
+                >
+                  <div className="flex items-center space-x-3">
+                    <BarChart3 className={`w-5 h-5 ${darkMode ? 'text-brand-primary' : 'text-gray-500'}`} />
+                    <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>My Stats</span>
+                  </div>
+                  <span className={`${darkMode ? 'text-brand-primary hover:text-brand-primary/80' : 'text-brand-primary hover:text-brand-primary/80'} text-sm font-medium`}>View</span>
+                </button>
+                <p className={`text-xs mt-1 ml-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Your play history & fun stats</p>
               </div>
             </div>
           </div>
@@ -174,8 +191,8 @@ export default function Sidebar({
 
             <div className={`mt-4 pt-4 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
               <p className={`text-xs text-center ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                雞仔 Pickle v1.0<br />
-                🏓🏓🏓🏓🏓
+匹克廚房 • PICKLE KITCHEN v1.0<br />
+                GEAR UP. PLAY WELL. LIVE MORE.
               </p>
             </div>
           </div>

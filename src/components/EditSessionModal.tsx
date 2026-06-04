@@ -213,7 +213,7 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
               placeholder="Pickle Time!"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+              className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
               required
             />
           </div>
@@ -227,7 +227,7 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
               type="datetime-local"
               value={dateTime}
               onChange={(e) => setDateTime(e.target.value)}
-              className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+              className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
               required
             />
           </div>
@@ -243,14 +243,14 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
                 placeholder="Enter custom location"
                 value={customLocation}
                 onChange={(e) => setCustomLocation(e.target.value)}
-                className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
                 required
               />
             ) : (
               <select
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
                 required
               >
                 {locationOptions.map(option => (
@@ -272,7 +272,7 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
               max="20"
               value={maxPlayers}
               onChange={(e) => setMaxPlayers(Number(e.target.value))}
-              className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+              className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
               required
             />
           </div>
@@ -284,7 +284,7 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
               id="isPrivate"
               checked={isPrivate}
               onChange={(e) => setIsPrivate(e.target.checked)}
-              className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+              className="w-4 h-4 text-brand-primary border-gray-300 rounded focus:ring-brand-primary"
             />
             <label htmlFor="isPrivate" className="text-sm font-medium text-gray-700">
               🔒 Private Session
@@ -300,7 +300,7 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
               <button
                 type="button"
                 onClick={() => setShowUserSelector(!showUserSelector)}
-                className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 bg-white"
+                className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary bg-white"
               >
                 {invitedUsers.length > 0 
                   ? `Selected ${invitedUsers.length} users` 
@@ -322,7 +322,7 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
                             setInvitedUsers(invitedUsers.filter(id => id !== user.id))
                           }
                         }}
-                        className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                        className="w-4 h-4 text-brand-primary border-gray-300 rounded focus:ring-brand-primary"
                       />
                       <span className="text-sm text-gray-700">{user.name}</span>
                     </label>
@@ -340,7 +340,7 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
             <select
               value={duration}
               onChange={(e) => setDuration(Number(e.target.value))}
-              className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+              className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
             >
               <option value={0.5}>30 minutes</option>
               <option value={1}>1 hour</option>
@@ -360,7 +360,7 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+              className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
             />
           </div>
 
@@ -369,14 +369,14 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-teal-700 text-white py-3 px-4 rounded-lg font-medium hover:bg-teal-800 disabled:opacity-50 transition-colors"
+            className="w-full bg-brand-primary text-white py-3 px-4 rounded font-display uppercase tracking-wider text-sm font-semibold hover:bg-brand-primary/90 disabled:opacity-50 transition-colors"
           >
             {loading ? 'Updating...' : 'Update Session'}
           </button>
         </form>
 
         {message && (
-          <p className={`mt-4 text-sm ${message.includes('successfully') ? 'text-teal-600' : 'text-red-600'}`}>
+          <p className={`mt-4 text-sm ${message.includes('successfully') ? 'text-brand-secondary' : 'text-red-600'}`}>
             {message}
           </p>
         )}

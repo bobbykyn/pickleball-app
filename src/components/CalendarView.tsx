@@ -33,13 +33,13 @@ export default function CalendarView({ sessions, darkMode, onDateClick, mobileVi
       const today = isToday(day)
       
       if (today && hasSession) {
-        return `${baseClasses} bg-teal-600 text-white font-bold ring-2 ring-yellow-400`
+        return `${baseClasses} bg-brand-primary text-white font-bold ring-2 ring-brand-gold`
       }
       if (today) {
         return `${baseClasses} ${darkMode ? 'bg-gray-600 text-white' : 'bg-gray-200 text-gray-900'} font-bold`
       }
       if (hasSession) {
-        return `${baseClasses} bg-teal-100 text-teal-800 font-medium hover:bg-teal-200`
+        return `${baseClasses} bg-brand-secondary/15 text-brand-secondary font-medium hover:bg-brand-secondary/25`
       }
       
       return `${baseClasses} ${
@@ -119,7 +119,7 @@ export default function CalendarView({ sessions, darkMode, onDateClick, mobileVi
       {/* Legend */}
       <div className="mt-4 space-y-2">
         <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-teal-100 rounded"></div>
+          <div className="w-4 h-4 bg-brand-secondary/15 rounded"></div>
           <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             Has sessions
           </span>

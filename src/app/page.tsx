@@ -11,6 +11,7 @@ import ProfileModal from '@/components/ProfileModal'
 import CalendarView from '@/components/CalendarView'
 import { Session, RSVP } from '@/types'
 import Sidebar from '../components/Sidebar'
+import BrandLogo from '../components/BrandLogo'
 import { Settings } from 'lucide-react'
 import { format, addMonths } from 'date-fns'
 
@@ -18,6 +19,7 @@ import { format, addMonths } from 'date-fns'
 import MobileCalendarView from '@/components/MobileCalendarView' */}
 
 import HistoryModal from '@/components/HistoryModal'
+import StatsModal from '@/components/StatsModal'
 import MobileCalendarSwiper from '@/components/MobileCalendarSwiper'
 
 export default function Home() {
@@ -26,6 +28,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [sessions, setSessions] = useState<Session[]>([])
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [showSidebar, setShowSidebar] = useState(false)
@@ -35,6 +38,7 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [currentMonthOffset, setCurrentMonthOffset] = useState(0)
   const [showHistoryModal, setShowHistoryModal] = useState(false)
+  const [showStatsModal, setShowStatsModal] = useState(false)
   const [rsvpLoading, setRsvpLoading] = useState<string | null>(null)
 
 
@@ -411,61 +415,67 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50'}`}>
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Pickle Kitchen</h1>
-          <p className="text-xl text-gray-600">Loading...</p>
+          <h1 className="text-3xl md:text-4xl font-display font-bold tracking-wider text-brand-primary mb-4">匹克廚房 • PICKLE KITCHEN</h1>
+          <p className="text-sm font-medium opacity-70 uppercase tracking-widest">Loading...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50'}`}>
-      {/* Header */}
-<div className={`shadow-sm border-b ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
-  <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
-    <div className="flex justify-between items-center">
-      <div>
-        <h1 className={`text-2xl md:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Pickle Kitchen</h1>
-        <p className={`mt-1 text-sm md:text-base ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Let's Pickle Time!!</p>
-        {user && (
-          <p className={`mt-1 text-sm md:hidden ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            Welcome, {userProfile?.name || user.email}
-          </p>
-        )}
-      </div>
-      
-      {user ? (
-        <div className="flex items-center gap-2">
-          <span className={`hidden md:block ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-            Welcome, {userProfile?.name || user.email}
-          </span>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-teal-700 text-white px-4 py-2 rounded-lg hover:bg-teal-800 font-medium"
-          >
-            Create Session
-          </button>
-          <button
-            onClick={() => setShowSidebar(!showSidebar)}
-            className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title="Settings"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
+      {/* Header (only when signed in; logged-out shows the splash hero) */}
+      {user && (
+      <div className="border-b-2 border-brand-border bg-card-bg/60 backdrop-blur-md sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-brand-primary flex items-center gap-3">
+                匹克廚房 <span className="text-base md:text-lg font-light text-foreground/70 hidden sm:inline">PICKLE KITCHEN</span>
+              </h1>
+              <p className="mt-1 text-[10px] md:text-xs font-display tracking-widest text-brand-secondary font-semibold">
+                GEAR UP. PLAY WELL. LIVE MORE. • EST. 2024
+              </p>
+              {user && (
+                <p className="mt-1 text-xs md:hidden font-medium text-foreground/60">
+                  Welcome, {userProfile?.name || user.email}
+                </p>
+              )}
+            </div>
+            
+            {user ? (
+              <div className="flex items-center gap-2">
+                <span className="hidden md:block text-sm font-semibold text-foreground/75 mr-2">
+                  Welcome, {userProfile?.name || user.email}
+                </span>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-brand-primary text-white px-4 py-2.5 rounded font-display text-xs uppercase tracking-wider hover:bg-brand-primary/95 transition-all font-semibold"
+                >
+                  Create Session
+                </button>
+                <button
+                  onClick={() => setShowSidebar(!showSidebar)}
+                  className="p-2 text-foreground/70 hover:bg-foreground/5 rounded-lg transition-colors"
+                  title="Settings"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="bg-brand-primary text-white px-5 py-2.5 rounded font-display text-xs uppercase tracking-wider hover:bg-brand-primary/95 transition-all font-semibold"
+              >
+                Login / Sign Up
+              </button>
+            )}
+          </div>
         </div>
-      ) : (
-        <button
-          onClick={() => setShowAuthModal(true)}
-          className="bg-teal-700 text-white px-4 py-2 rounded-lg hover:bg-teal-800 font-medium"
-        >
-          Login / Sign Up
-        </button>
+      </div>
       )}
-    </div>
-  </div>
-</div>
 
       {/* Main Content */}
       {user ? (
@@ -473,7 +483,7 @@ export default function Home() {
           <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
             {/* Left Column - Calendar - Hidden on mobile, shown on desktop */}
             <div className="hidden lg:block w-80 flex-shrink-0">
-              <div className={`rounded-lg shadow-lg p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+              <div className="rounded-lg border border-brand-border bg-card-bg/60 p-6 backdrop-blur-sm sticky top-28">
                 <CalendarView 
                   sessions={sessions} 
                   darkMode={darkMode}
@@ -483,23 +493,23 @@ export default function Home() {
             </div>
 
             {/* Right Column - Sessions - Full width on mobile */}
-<div className="flex-1">
-  {/* Mobile Calendar Banner */}
-  <div className="lg:hidden mb-4 -mx-4 px-4">
-    <div className={`rounded-lg p-3 ${darkMode ? 'bg-gray-800' : 'bg-white shadow'}`}>
-      <MobileCalendarSwiper
-        sessions={sessions}
-        darkMode={darkMode}
-        onDateClick={handleCalendarDateClick}
-        currentMonthOffset={currentMonthOffset}
-        setCurrentMonthOffset={setCurrentMonthOffset}
-      />
-    </div>
-  </div>
+            <div className="flex-1">
+              {/* Mobile Calendar Banner */}
+              <div className="lg:hidden mb-4 -mx-4 px-4">
+                <div className="rounded-lg p-3 bg-card-bg/60 border border-brand-border backdrop-blur-sm">
+                  <MobileCalendarSwiper
+                    sessions={sessions}
+                    darkMode={darkMode}
+                    onDateClick={handleCalendarDateClick}
+                    currentMonthOffset={currentMonthOffset}
+                    setCurrentMonthOffset={setCurrentMonthOffset}
+                  />
+                </div>
+              </div>
 
-  <h2 className={`text-xl md:text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-    Upcoming Games
-  </h2>
+              <h2 className="text-xl md:text-2xl font-display font-bold tracking-wider text-brand-primary border-b border-brand-border pb-2 mb-6 uppercase flex items-center justify-between">
+                <span>Upcoming Matches | 即將對決</span>
+              </h2>
 
               {sessions.length > 0 ? (
                 <div className="space-y-4 md:space-y-6">
@@ -518,9 +528,9 @@ export default function Home() {
                   ))}
                 </div>
               ) : (
-                <div className={`text-center py-8 md:py-12 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                  <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    No sessions yet! Use the Create Session button above.
+                <div className="text-center py-12 rounded-lg bg-card-bg/30 border border-brand-border">
+                  <p className="font-medium text-foreground/60 text-sm">
+                    No sessions yet! Click "Create Session" to list a new match.
                   </p>
                 </div>
               )}
@@ -528,25 +538,36 @@ export default function Home() {
           </div>
         </div>
       ) : (
-        <div className="text-center py-12">
-          <h2 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            Join our Pickleball Crew!
-          </h2>
-          <p className={`mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Sign up to see and join upcoming games
-          </p>
-          <button
-            onClick={() => setShowAuthModal(true)}
-            className="bg-teal-700 text-white px-8 py-3 rounded-lg hover:bg-teal-800 font-medium text-lg"
-          >
-            Get Started
-          </button>
+        <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
+          <BrandLogo size="lg" />
+
+          {/* Join the Crew */}
+          <div className="mt-12 w-full max-w-xs">
+            <p className="text-center text-[11px] font-display tracking-[0.3em] text-foreground/50 uppercase mb-4">
+              Join the Crew · 加入匹克廚房
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => { setAuthMode('login'); setShowAuthModal(true) }}
+                className="w-full bg-[#F2E7D6] text-[#0D1B2A] py-3.5 rounded-full font-display uppercase tracking-[0.2em] text-sm font-semibold hover:bg-[#e9dcc6] transition-all shadow-md"
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => { setAuthMode('signup'); setShowAuthModal(true) }}
+                className="w-full border border-foreground/30 text-foreground py-3.5 rounded-full font-display uppercase tracking-[0.2em] text-sm font-semibold hover:bg-foreground/5 transition-all"
+              >
+                Sign Up
+              </button>
+            </div>
+            <p className="mt-6 text-center text-xs text-foreground/50 leading-relaxed">
+              See, create, and join upcoming local matches.
+            </p>
+          </div>
         </div>
       )}
 
-
-
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} initialMode={authMode} />
       <CreateSessionModal 
         isOpen={showCreateModal} 
         onClose={() => {
@@ -584,12 +605,22 @@ export default function Home() {
         }}
         onOpenHistory={() => {
           setShowSidebar(false)
-          setShowHistoryModal(true) 
+          setShowHistoryModal(true)
         }}
-        /> 
+        onOpenStats={() => {
+          setShowSidebar(false)
+          setShowStatsModal(true)
+        }}
+        />
         <HistoryModal
         isOpen={showHistoryModal}
         onClose={() => setShowHistoryModal(false)}
+        darkMode={darkMode}
+        user={user}
+        />
+        <StatsModal
+        isOpen={showStatsModal}
+        onClose={() => setShowStatsModal(false)}
         darkMode={darkMode}
         user={user}
         />

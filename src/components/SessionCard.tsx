@@ -160,8 +160,8 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
   <div className="flex items-center space-x-2">
           <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
             darkMode 
-              ? 'bg-teal-900 text-teal-200' 
-              : 'bg-teal-100 text-teal-800'
+              ? 'bg-brand-secondary/25 text-brand-secondary' 
+              : 'bg-brand-secondary/15 text-brand-secondary'
           }`}>
             <Users className="w-4 h-4" />
             <span>{yesRSVPs.length + totalGuestSeats}/{session.max_players}</span>
@@ -254,8 +254,8 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
       <div className="my-8">
         <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium mb-4 ${
           darkMode 
-            ? 'bg-teal-900 text-teal-200' 
-            : 'bg-teal-100 text-teal-800'
+            ? 'bg-brand-secondary/25 text-brand-secondary' 
+            : 'bg-brand-secondary/15 text-brand-secondary'
         }`}>
           <span>Who's Playing:</span>
           {/* {maybeRSVPs.length > 0 && (
@@ -268,8 +268,8 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
               <div key={rsvp.id} className="flex flex-wrap gap-2 items-center">
                 <div className={`flex items-center space-x-2 px-3 py-2 rounded-full ${
                   darkMode
-                    ? 'bg-teal-900 text-teal-200'
-                    : 'bg-teal-50 text-teal-800'
+                    ? 'bg-brand-secondary/25 text-brand-secondary'
+                    : 'bg-brand-secondary/10 text-brand-secondary'
                 }`}>
                   <UserAvatar profile={rsvp.profiles} size="sm" />
                   <span className="text-sm font-medium">
@@ -331,11 +331,9 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
               className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-60 ${
                 userRSVPStatus === 'yes'
                   ? (joinMode === 'closed'
-                      ? 'bg-teal-700 text-white hover:bg-teal-800 cursor-pointer'
+                      ? 'bg-brand-secondary text-white hover:bg-brand-secondary/90 cursor-pointer'
                       : 'bg-gray-600 text-white hover:bg-gray-700 cursor-pointer')
-                  : darkMode
-                    ? 'bg-teal-800 text-teal-200 hover:bg-teal-700'
-                    : 'bg-teal-100 text-teal-700 hover:bg-teal-200'
+                  : 'bg-brand-primary text-white hover:bg-brand-primary/90'
               }`}
             >
               {rsvpLoading && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -381,7 +379,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
               <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={() => { handleRSVP('yes'); setJoinMode('closed') }}
-                  className="py-2 px-3 rounded-lg text-sm font-medium bg-teal-700 text-white hover:bg-teal-800"
+                  className="py-2 px-3 rounded-lg text-sm font-medium bg-brand-primary text-white hover:bg-brand-primary/90"
                 >
                   Just me
                 </button>
@@ -468,7 +466,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                 {(picked.length > 0 || guestNames.length > 0) && (
                   <div className="flex flex-wrap gap-2">
                     {picked.map(u => (
-                      <span key={u.id} className="inline-flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-800 rounded-full text-xs">
+                      <span key={u.id} className="inline-flex items-center gap-1 px-2 py-1 bg-brand-secondary/15 text-brand-secondary rounded-full text-xs whitespace-nowrap">
                         {u.name}
                         <button onClick={() => setPicked(prev => prev.filter(p => p.id !== u.id))}><X className="w-3 h-3" /></button>
                       </span>
@@ -511,7 +509,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                 <button
                   disabled={rsvpLoading}
                   onClick={submitJoin}
-                  className="w-full py-2 px-3 rounded-lg font-medium text-sm bg-teal-700 text-white hover:bg-teal-800 disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="w-full py-2 px-3 rounded-lg font-medium text-sm bg-brand-primary text-white hover:bg-brand-primary/90 disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {rsvpLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                   {userRSVPStatus === 'yes' ? 'Update Guests' : 'Confirm Join'} {totalAdded > 0 ? `(+${totalAdded})` : ''}

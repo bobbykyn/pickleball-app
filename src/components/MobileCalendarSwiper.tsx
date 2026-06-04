@@ -45,7 +45,7 @@ export default function MobileCalendarSwiper({
         
         <div className="text-xs space-y-1">
           <div className="flex items-center space-x-1">
-            <div className="w-3 h-3 bg-teal-100 rounded"></div>
+            <div className="w-3 h-3 bg-brand-secondary/15 rounded"></div>
             <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Session</span>
           </div>
           <div className="flex items-center space-x-1">

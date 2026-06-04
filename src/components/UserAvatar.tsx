@@ -37,7 +37,7 @@ const avatarUrl = profile?.avatar_url || profile?.google_avatar_url || null
   }
 
   return (
-    <div className={`${sizeClasses[size]} rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-medium ${className}`}>
+    <div className={`${sizeClasses[size]} rounded-full bg-brand-secondary/15 text-brand-secondary flex items-center justify-center font-medium ${className}`}>
       {initials}
     </div>
   )

@@ -188,7 +188,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
             </div>
             
             <div className="flex items-center space-x-2">
-              <label className="cursor-pointer bg-teal-50 hover:bg-teal-100 text-teal-700 px-3 py-1.5 rounded-lg text-xs font-semibold border border-teal-200 transition-colors">
+              <label className="cursor-pointer bg-brand-secondary/10 hover:bg-brand-secondary/20 text-brand-secondary px-3 py-1.5 rounded-lg text-xs font-semibold border border-brand-secondary/30 transition-colors">
                 <span>Upload Photo</span>
                 <input 
                   type="file" 
@@ -223,7 +223,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
               placeholder="Enter your name (optional)"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+              className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
             />
             <p className="text-xs text-gray-500 mt-1">
               This name will be shown instead of your email
@@ -240,7 +240,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
               placeholder="Enter your phone number (optional)"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+              className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
             />
             <p className="text-xs text-gray-500 mt-1">
               For WhatsApp notifications (coming soon)
@@ -259,14 +259,14 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-teal-700 text-white py-3 px-4 rounded-lg font-medium hover:bg-teal-800 disabled:opacity-50 transition-colors"
+            className="w-full bg-brand-primary text-white py-3 px-4 rounded font-display uppercase tracking-wider text-sm font-semibold hover:bg-brand-primary/90 disabled:opacity-50 transition-colors"
           >
             {loading ? 'Saving...' : 'Save Profile'}
           </button>
         </form>
 
         {message && (
-          <p className={`mt-4 text-sm text-center ${message.includes('successfully') ? 'text-teal-600' : 'text-red-600'}`}>
+          <p className={`mt-4 text-sm text-center ${message.includes('successfully') ? 'text-brand-secondary' : 'text-red-600'}`}>
             {message}
           </p>
         )}

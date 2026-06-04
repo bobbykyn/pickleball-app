@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { X, Calendar, MapPin, Users, User } from 'lucide-react'
 import { Session } from '@/types'
 import { format } from 'date-fns'
+import UserAvatar from './UserAvatar'
 
 interface HistoryModalProps {
   isOpen: boolean
@@ -102,6 +103,57 @@ export default function HistoryModal({ isOpen, onClose, darkMode, user }: Histor
             })()}
           </div>
         </div>
+
+        {/* Participants */}
+        {(() => {
+          const goingRsvps = session.rsvps?.filter(r => r.status === 'yes') || []
+          if (goingRsvps.length === 0) return null
+          return (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {goingRsvps.map((rsvp) => (
+                <div
+                  key={rsvp.id}
+                  className={`flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full ${darkMode ? 'bg-gray-600' : 'bg-white border border-gray-200'}`}
+                >
+                  <UserAvatar profile={rsvp.profiles} size="sm" />
+                  <span className={`text-xs font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                    {rsvp.profiles?.name || 'Player'}
+                  </span>
+                </div>
+              ))}
+              {goingRsvps.flatMap((rsvp) => {
+                const names = rsvp.guest_names || []
+                const unnamed = Math.max(0, (rsvp.guest_count || 0) - names.length)
+                return [
+                  ...names.map((g, i) => (
+                    <div
+                      key={`${rsvp.id}-guest-${i}`}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${darkMode ? 'bg-gray-600' : 'bg-white border border-gray-200'}`}
+                    >
+                      <User className={`w-3.5 h-3.5 ${darkMode ? 'text-gray-400' : 'text-gray-400'}`} />
+                      <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                        {g} <span className="opacity-60">(guest)</span>
+                      </span>
+                    </div>
+                  )),
+                  ...(unnamed > 0
+                    ? [(
+                        <div
+                          key={`${rsvp.id}-guest-unnamed`}
+                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${darkMode ? 'bg-gray-600' : 'bg-white border border-gray-200'}`}
+                        >
+                          <User className={`w-3.5 h-3.5 ${darkMode ? 'text-gray-400' : 'text-gray-400'}`} />
+                          <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                            +{unnamed} guest{unnamed === 1 ? '' : 's'}
+                          </span>
+                        </div>
+                      )]
+                    : []),
+                ]
+              })}
+            </div>
+          )
+        })()}
       </div>
       {user?.email === 'bobbykyn@gmail.com' && (
         <button

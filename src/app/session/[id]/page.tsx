@@ -73,7 +73,7 @@ export default function SessionPage() {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading session...</p>
         </div>
       </div>
@@ -88,7 +88,7 @@ export default function SessionPage() {
           <p className="text-gray-600 dark:text-gray-400 mb-6">{error || 'The session you are looking for does not exist.'}</p>
           <a 
             href="/" 
-            className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors"
+            className="bg-brand-primary text-white px-6 py-3 rounded-lg hover:bg-brand-primary/90 transition-colors"
           >
             Back to Home
           </a>
@@ -104,7 +104,7 @@ export default function SessionPage() {
           <div className="mb-6">
             <a 
               href="/" 
-              className="inline-flex items-center text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
+              className="inline-flex items-center text-brand-primary hover:text-brand-primary/80"
             >
               ← Back to all sessions
             </a>

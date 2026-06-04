@@ -300,7 +300,7 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
               placeholder="Pickle Time!"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+              className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
               required
             />
           </div>
@@ -314,7 +314,7 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
             value={dateTime}
             onChange={(e) => setDateTime(e.target.value)}
             min={getMinDateTime()} 
-            className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+            className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
             required
             />
           </div>
@@ -331,14 +331,14 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
                 placeholder="Enter custom location"
                 value={customLocation}
                 onChange={(e) => setCustomLocation(e.target.value)}
-                className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
                 required
               />
             ) : (
               <select
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
                 required
               >
                 {locationOptions.map(option => (
@@ -360,7 +360,7 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
               max="20"
               value={maxPlayers}
               onChange={(e) => setMaxPlayers(Number(e.target.value))}
-              className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+              className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
               required
             />
           </div>
@@ -381,7 +381,7 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
       }}
       onFocus={() => setShowUserDropdown(userSearchTerm.length > 0)}
       placeholder="Type name to search or add..."
-      className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+      className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
     />
     
     {/* Dropdown */}
@@ -417,12 +417,12 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
       {preAddedUsers.map(userId => {
         const user = allUsers.find(u => u.id === userId)
         return (
-          <span key={userId} className="inline-flex items-center gap-1 px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm">
+          <span key={userId} className="inline-flex items-center gap-1 px-3 py-1 bg-brand-secondary/15 text-brand-secondary rounded-full text-sm">
             {user?.name}
             <button
               type="button"
               onClick={() => handleRemovePreAddedUser(userId)}
-              className="hover:text-teal-900"
+              className="hover:text-brand-secondary/70"
             >
               <X className="w-3 h-3" />
             </button>
@@ -451,7 +451,7 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
               id="isPrivate"
               checked={isPrivate}
               onChange={(e) => setIsPrivate(e.target.checked)}
-              className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+              className="w-4 h-4 text-brand-primary border-gray-300 rounded focus:ring-brand-primary"
             />
             <label htmlFor="isPrivate" className="text-sm font-medium text-gray-700">
               🔒 Create Private Session
@@ -467,7 +467,7 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
               <button
                 type="button"
                 onClick={() => setShowUserSelector(!showUserSelector)}
-                className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 bg-white"
+                className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary bg-white"
               >
                 {invitedUsers.length > 0 
                   ? `Selected ${invitedUsers.length} users` 
@@ -489,7 +489,7 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
                             setInvitedUsers(invitedUsers.filter(id => id !== user.id))
                           }
                         }}
-                        className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                        className="w-4 h-4 text-brand-primary border-gray-300 rounded focus:ring-brand-primary"
                       />
                       <span className="text-sm text-gray-700">{user.name}</span>
                     </label>
@@ -507,7 +507,7 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
             <select
               value={duration}
               onChange={(e) => setDuration(Number(e.target.value))}
-              className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+              className="w-full p-3 border rounded-lg text-gray-900 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
             >
               <option value={0.5}>30 minutes</option>
               <option value={1}>1 hour</option>
@@ -527,7 +527,7 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+              className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
             />
           </div>
 
@@ -536,14 +536,14 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-teal-700 text-white py-3 px-4 rounded-lg font-medium hover:bg-teal-800 disabled:opacity-50 transition-colors"
+            className="w-full bg-brand-primary text-white py-3 px-4 rounded font-display uppercase tracking-wider text-sm font-semibold hover:bg-brand-primary/90 disabled:opacity-50 transition-colors"
           >
             {loading ? 'Creating...' : 'Create Session'}
           </button>
         </form>
 
         {message && (
-          <p className={`mt-4 text-sm ${message.includes('successfully') ? 'text-teal-600' : 'text-red-600'}`}>
+          <p className={`mt-4 text-sm ${message.includes('successfully') ? 'text-brand-secondary' : 'text-red-600'}`}>
             {message}
           </p>
         )}

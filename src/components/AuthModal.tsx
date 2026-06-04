@@ -1,16 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { X } from 'lucide-react'
 
 interface AuthModalProps {
   isOpen: boolean
   onClose: () => void
+  initialMode?: 'login' | 'signup'
 }
 
-export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalProps) {
   const [isLogin, setIsLogin] = useState(true)
+
+  // Sync to the requested mode each time the modal is opened
+  useEffect(() => {
+    if (isOpen) setIsLogin(initialMode !== 'signup')
+  }, [isOpen, initialMode])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
@@ -107,7 +113,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   placeholder="Your name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                  className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
                   required
                 />
               )}
@@ -117,7 +123,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
                 required
               />
               
@@ -126,14 +132,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
                 required
           />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-teal-700 text-white p-3 rounded-lg font-medium hover:bg-teal-800 disabled:opacity-50"
+            className="w-full bg-brand-primary text-white p-3 rounded font-display uppercase tracking-wider text-sm font-semibold hover:bg-brand-primary/90 disabled:opacity-50 transition-colors"
           >
             {loading ? 'Loading...' : (isLogin ? 'Login' : 'Sign Up')}
           </button>
@@ -171,7 +177,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
 <button
   onClick={() => setIsLogin(!isLogin)}
-  className="w-full mt-4 text-center text-teal-700 hover:underline font-medium"
+  className="w-full mt-4 text-center text-brand-primary hover:underline font-medium"
 >
           {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Login'}
         </button>
