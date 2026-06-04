@@ -118,14 +118,15 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
         .single()
 
       if (existingProfile) {
-        // Update existing profile
+        // Update existing profile.
+        // NOTE: intentionally do NOT write `updated_at` — the column may not
+        // exist on the profiles table and would make the whole update fail.
         const { error } = await supabase
           .from('profiles')
           .update({
             name: displayName || null,
             phone: phoneNumber || null,
             avatar_url: avatarUrl,
-            updated_at: new Date().toISOString()
           })
           .eq('id', user.id)
 
@@ -155,7 +156,8 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
 
     } catch (error: any) {
       console.error('Error updating profile:', error)
-      setMessage('Failed to update profile. Please try again.')
+      const detail = error?.message || error?.error_description || error?.hint || 'Please try again.'
+      setMessage(`Failed to update profile: ${detail}`)
     } finally {
       setLoading(false)
     }

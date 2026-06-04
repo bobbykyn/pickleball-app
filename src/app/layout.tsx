@@ -1,5 +1,5 @@
 
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -15,13 +15,17 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Pickle Kitchen',
-  description: 'Pickleball session booking',
+  description: 'Gear up. Play well. Live more. Pickleball sessions in Hong Kong.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'Pickle Kitchen'
   }
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0D1B2A',
 }
 
 export default function RootLayout({
