@@ -1,7 +1,7 @@
 'use client'
 
 import { User } from '@supabase/supabase-js'
-import { X, User as UserIcon, Bell, Moon, Sun, Calendar, BarChart3 } from 'lucide-react'
+import { X, User as UserIcon, Bell, Moon, Sun, Calendar, BarChart3, Users } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 interface SidebarProps {
@@ -14,6 +14,7 @@ interface SidebarProps {
   onOpenProfile: () => void
   onOpenHistory?: () => void
   onOpenStats?: () => void
+  onOpenAllStats?: () => void
 }
 
 export default function Sidebar({ 
@@ -25,7 +26,8 @@ export default function Sidebar({
   onSignOut, 
   onOpenProfile,
   onOpenHistory,
-  onOpenStats
+  onOpenStats,
+  onOpenAllStats
 }: SidebarProps) {
   const [mounted, setMounted] = useState(false)
 
@@ -172,6 +174,21 @@ export default function Sidebar({
                   <span className={`${darkMode ? 'text-brand-primary hover:text-brand-primary/80' : 'text-brand-primary hover:text-brand-primary/80'} text-sm font-medium`}>View</span>
                 </button>
                 <p className={`text-xs mt-1 ml-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Your play history & fun stats</p>
+              </div>
+
+              {/* All Stats */}
+              <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                <button
+                  onClick={onOpenAllStats}
+                  className="w-full flex items-center justify-between"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Users className={`w-5 h-5 ${darkMode ? 'text-brand-primary' : 'text-gray-500'}`} />
+                    <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>All Stats</span>
+                  </div>
+                  <span className="text-brand-primary hover:text-brand-primary/80 text-sm font-medium">View</span>
+                </button>
+                <p className={`text-xs mt-1 ml-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Community totals & leaderboard</p>
               </div>
             </div>
           </div>
