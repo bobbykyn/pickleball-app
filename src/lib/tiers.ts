@@ -15,10 +15,10 @@ export const TIERS: Tier[] = [
   { name: 'Dishwasher',     zh: '洗碗',       sub: 'Everyone starts at the sink',  emoji: '🧽', minHours: 0,   color: '#94A3B8' },
   { name: 'Kitchen Hand',   zh: '打雜',       sub: 'Odd jobs around the kitchen',  emoji: '🧹', minHours: 15,  color: '#64748B' },
   { name: 'Junior Chef',    zh: '見習廚師',   sub: 'Learning the craft',           emoji: '🔪', minHours: 50,  color: '#3F8E7C' },
-  { name: 'Sous Chef',      zh: '副廚',       sub: 'Second-in-command',            emoji: '🥘', minHours: 100, color: '#2A6A5A' },
-  { name: 'Head Chef',      zh: '主廚',       sub: 'Runs the pass',                emoji: '👨‍🍳', minHours: 200, color: '#C0392B' },
+  { name: 'Sous Chef',      zh: '副廚',       sub: 'Second-in-command',            emoji: '🥘', minHours: 75,  color: '#2A6A5A' },
+  { name: 'Head Chef',      zh: '主廚',       sub: 'Runs the pass',                emoji: '👨‍🍳', minHours: 150, color: '#C0392B' },
   { name: 'Executive Chef', zh: '行政總廚',   sub: 'Le patron',                    emoji: '⭐', minHours: 300, color: '#F2A900' },
-  { name: 'Michelin Star',  zh: '米芝蓮之星', sub: 'A legend of the kitchen',      emoji: '🌟', minHours: 500, color: '#D4A017' },
+  { name: 'Michelin 3 Star', zh: '米芝蓮三星', sub: 'A legend of the kitchen',     emoji: '🌟', minHours: 500, color: '#D4A017' },
 ]
 
 export interface TierProgress {

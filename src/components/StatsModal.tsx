@@ -177,8 +177,8 @@ export default function StatsModal({ isOpen, onClose, darkMode, user, viewUserId
                   <div className="flex items-center gap-3">
                     <span className="text-3xl leading-none">{rank.tier.emoji}</span>
                     <div className="min-w-0">
-                      <p className="font-display text-lg font-bold leading-tight" style={{ color: rank.tier.color }}>
-                        {rank.tier.name}
+                      <p className="font-display text-xl font-bold leading-tight" style={{ color: rank.tier.color }}>
+                        {rank.tier.zh}
                       </p>
                       <p className={`text-xs ${subText}`}>{rank.tier.sub}</p>
                     </div>
@@ -190,7 +190,7 @@ export default function StatsModal({ isOpen, onClose, darkMode, user, viewUserId
                     </div>
                     <p className={`text-[11px] mt-1.5 ${subText}`}>
                       {rank.next
-                        ? `${rank.hoursToNext}h of court time to ${rank.next.emoji} ${rank.next.name}`
+                        ? `${rank.hoursToNext}h of court time to ${rank.next.zh}`
                         : 'Top rank achieved — you run this kitchen 👑'}
                     </p>
                   </div>

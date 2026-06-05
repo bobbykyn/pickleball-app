@@ -72,7 +72,7 @@ export default function AllStatsModal({ isOpen, onClose, darkMode, user }: AllSt
         <div className="flex-1 min-w-0 flex items-center gap-1.5">
           <span className={`text-sm font-medium truncate ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{e.name}{isMe ? ' (you)' : ''}</span>
           <span className={`${subText} opacity-50`}>|</span>
-          <span className="text-xs font-semibold whitespace-nowrap" style={{ color: t.color }}>{t.name}</span>
+          <span className="text-sm font-semibold whitespace-nowrap" style={{ color: t.color }}>{t.zh}</span>
         </div>
         <div className="text-right">
           <p className="text-sm font-display font-bold text-brand-primary leading-none">{e.hours}h</p>
