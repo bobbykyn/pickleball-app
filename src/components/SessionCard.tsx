@@ -21,9 +21,10 @@ interface SessionCardProps {
   ) => void
   rsvpLoading?: boolean
   darkMode?: boolean
+  onViewPlayer?: (userId: string, profile?: { name?: string; avatar_url?: string | null; google_avatar_url?: string | null }) => void
 }
 
-export default function SessionCard({ session, currentUserId, currentUserEmail, onDelete, onEdit, onRSVP, rsvpLoading = false, darkMode = false }: SessionCardProps) {
+export default function SessionCard({ session, currentUserId, currentUserEmail, onDelete, onEdit, onRSVP, rsvpLoading = false, darkMode = false, onViewPlayer }: SessionCardProps) {
   const [joinMode, setJoinMode] = useState<'closed' | 'choose' | 'plus1' | 'plusmore'>('closed')
   const [allUsers, setAllUsers] = useState<Array<{ id: string; name: string; avatar_url?: string }>>([])
   const [picked, setPicked] = useState<AddedUser[]>([])
@@ -266,16 +267,22 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
           <div className="flex flex-wrap gap-4">
             {yesRSVPs.map((rsvp) => (
               <div key={rsvp.id} className="flex flex-wrap gap-2 items-center">
-                <div className={`flex items-center space-x-2 px-3 py-2 rounded-full ${
-                  darkMode
-                    ? 'bg-brand-secondary/25 text-brand-secondary'
-                    : 'bg-brand-secondary/10 text-brand-secondary'
-                }`}>
+                <button
+                  type="button"
+                  onClick={() => onViewPlayer?.(rsvp.user_id, rsvp.profiles)}
+                  disabled={!onViewPlayer}
+                  title={onViewPlayer ? `View ${rsvp.profiles?.name || 'player'}'s stats` : undefined}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-full transition-colors ${
+                    darkMode
+                      ? 'bg-brand-secondary/25 text-brand-secondary'
+                      : 'bg-brand-secondary/10 text-brand-secondary'
+                  } ${onViewPlayer ? 'hover:ring-2 hover:ring-brand-secondary/50 cursor-pointer' : 'cursor-default'}`}
+                >
                   <UserAvatar profile={rsvp.profiles} size="sm" />
                   <span className="text-sm font-medium">
                     {rsvp.profiles?.name || 'Player'}
                   </span>
-                </div>
+                </button>
                 {rsvp.guest_names?.map((gname, gi) => (
                   <div key={`g-${rsvp.id}-${gi}`} className={`flex items-center px-3 py-2 rounded-full text-sm font-medium ${
                     darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'

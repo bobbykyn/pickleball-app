@@ -17,6 +17,7 @@ interface HistoryModalProps {
 export default function HistoryModal({ isOpen, onClose, darkMode, user }: HistoryModalProps) {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
+  const [tab, setTab] = useState<'all' | 'created' | 'joined'>('all')
 
   useEffect(() => {
     if (isOpen) {
@@ -65,25 +66,68 @@ export default function HistoryModal({ isOpen, onClose, darkMode, user }: Histor
 
   if (!isOpen) return null
 
+  const createdSessions = sessions.filter((s) => s.created_by === user?.id)
+  const joinedSessions = sessions.filter((s) => s.rsvps?.some((r) => r.user_id === user?.id && r.status === 'yes'))
+  const filtered = tab === 'created' ? createdSessions : tab === 'joined' ? joinedSessions : sessions
+
+  const tabs: { key: 'all' | 'created' | 'joined'; label: string; count: number }[] = [
+    { key: 'all', label: 'All', count: sessions.length },
+    { key: 'created', label: 'Created', count: createdSessions.length },
+    { key: 'joined', label: 'Joined', count: joinedSessions.length },
+  ]
+
+  const emptyText = tab === 'created'
+    ? "You haven't created any past sessions."
+    : tab === 'joined'
+      ? "You haven't joined any past sessions."
+      : 'No past games yet'
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto`}>
-        <div className="flex justify-between items-center mb-6">
-          <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Game History</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className={`text-xl font-display font-bold tracking-wider uppercase text-brand-primary`}>Game History | 戰績</h2>
           <button onClick={onClose} className={`${darkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>
             <X className="w-5 h-5" />
           </button>
         </div>
 
+        {/* Tabs */}
+        <div className={`flex gap-1 mb-5 p-1 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-100'}`}>
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`flex-1 py-2 px-2 rounded-md text-sm font-medium transition-colors ${
+                tab === t.key
+                  ? 'bg-brand-primary text-white'
+                  : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {t.label} <span className="opacity-70">({t.count})</span>
+            </button>
+          ))}
+        </div>
+
         {loading ? (
           <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>Loading...</p>
-        ) : sessions.length > 0 ? (
+        ) : filtered.length > 0 ? (
           <div className="space-y-3">
-           {sessions.map((session) => (
+           {filtered.map((session) => (
   <div key={session.id} className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
     <div className="flex justify-between">
       <div className="flex-1">
-        <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{session.title}</h3>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{session.title}</h3>
+          {session.created_by === user?.id && (
+            <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-brand-primary/15 text-brand-primary">
+              You created
+            </span>
+          )}
+        </div>
+        <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          Created by {session.created_by === user?.id ? 'you' : (session.profiles?.name || 'someone')}
+        </p>
         <div className={`text-sm mt-2 space-y-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
           <div className="flex items-center">
             <Calendar className="w-4 h-4 mr-2" />
@@ -173,7 +217,7 @@ export default function HistoryModal({ isOpen, onClose, darkMode, user }: Histor
 ))}
           </div>
         ) : (
-          <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>No past games yet</p>
+          <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>{emptyText}</p>
         )}
       </div>
     </div>

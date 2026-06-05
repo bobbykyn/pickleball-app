@@ -39,6 +39,7 @@ export default function Home() {
   const [currentMonthOffset, setCurrentMonthOffset] = useState(0)
   const [showHistoryModal, setShowHistoryModal] = useState(false)
   const [showStatsModal, setShowStatsModal] = useState(false)
+  const [statsView, setStatsView] = useState<{ id: string; profile?: any } | null>(null)
   const [rsvpLoading, setRsvpLoading] = useState<string | null>(null)
 
 
@@ -524,6 +525,7 @@ export default function Home() {
                       onRSVP={handleRSVP}
                       rsvpLoading={rsvpLoading === session.id}
                       darkMode={darkMode}
+                      onViewPlayer={(id, profile) => { setStatsView({ id, profile }); setShowStatsModal(true) }}
                     />
                   ))}
                 </div>
@@ -609,6 +611,7 @@ export default function Home() {
         }}
         onOpenStats={() => {
           setShowSidebar(false)
+          setStatsView(null)
           setShowStatsModal(true)
         }}
         />
@@ -620,9 +623,11 @@ export default function Home() {
         />
         <StatsModal
         isOpen={showStatsModal}
-        onClose={() => setShowStatsModal(false)}
+        onClose={() => { setShowStatsModal(false); setStatsView(null) }}
         darkMode={darkMode}
         user={user}
+        viewUserId={statsView?.id}
+        viewUserProfile={statsView?.profile}
         />
     </div>
   )
