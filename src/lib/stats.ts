@@ -59,6 +59,8 @@ export interface CommunityStats {
   playerHours: number      // sum of court time across all participations
   totalGuests: number
   busiestMonth: string
+  favoriteVenue: string
+  biggestSession: { count: number; month: string }
 }
 
 /** Community-wide aggregates across all past sessions. */
@@ -66,18 +68,28 @@ export function computeCommunityStats(raw: RawSession[]): CommunityStats {
   const players = new Set<string>()
   const venues = new Set<string>()
   const months = new Map<string, number>()
+  const venueCounts = new Map<string, number>()
   let totalSessions = 0
   let playerHours = 0
   let totalGuests = 0
+  let biggestSession = { count: 0, month: '—' }
 
   for (const s of raw) {
     const dur = Number(s.duration_hours) || 0
     const yes = (s.rsvps || []).filter((r) => r.status === 'yes')
     if (yes.length > 0) {
       totalSessions++
-      if (s.location) venues.add(s.location)
       const k = format(new Date(s.date_time), 'MMM yyyy')
       months.set(k, (months.get(k) || 0) + 1)
+      if (s.location) {
+        venues.add(s.location)
+        venueCounts.set(s.location, (venueCounts.get(s.location) || 0) + 1)
+      }
+      // Total attendance = players + their guests
+      const attendance = yes.reduce((sum, r) => sum + 1 + (r.guest_count || 0), 0)
+      if (attendance > biggestSession.count) {
+        biggestSession = { count: attendance, month: k }
+      }
     }
     for (const r of yes) {
       players.add(r.user_id)
@@ -89,6 +101,9 @@ export function computeCommunityStats(raw: RawSession[]): CommunityStats {
   let busiestMonth = '—', bmCount = 0
   months.forEach((c, k) => { if (c > bmCount) { bmCount = c; busiestMonth = k } })
 
+  let favoriteVenue = '—', fvCount = 0
+  venueCounts.forEach((c, k) => { if (c > fvCount) { fvCount = c; favoriteVenue = k } })
+
   return {
     totalSessions,
     totalPlayers: players.size,
@@ -96,5 +111,7 @@ export function computeCommunityStats(raw: RawSession[]): CommunityStats {
     playerHours,
     totalGuests,
     busiestMonth,
+    favoriteVenue,
+    biggestSession,
   }
 }

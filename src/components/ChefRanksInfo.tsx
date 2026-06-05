@@ -40,22 +40,23 @@ export default function ChefRanksInfo({ darkMode, currentTierName, className = '
             </div>
             <p className={`text-xs mb-4 ${subText}`}>Climb the brigade by racking up court time.</p>
             <div className="space-y-1.5">
-              {[...TIERS].reverse().map((t) => {
+              {TIERS.map((t, i) => ({ t, i })).reverse().map(({ t, i }) => {
                 const current = t.name === currentTierName
+                const next = TIERS[i + 1]
+                const range = next ? `${t.minHours}–${next.minHours}h` : `${t.minHours}h+`
                 return (
                   <div
                     key={t.name}
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}
                     style={current ? { boxShadow: `inset 0 0 0 1px ${t.color}` } : undefined}
                   >
-                    <span className="text-2xl leading-none w-8 text-center">{t.emoji}</span>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm leading-tight" style={{ color: t.color }}>
-                        {t.name}{current ? ' · you' : ''}
+                        {t.name} · {t.zh}{current ? ' · you' : ''}
                       </p>
                       <p className={`text-[11px] ${subText} truncate`}>{t.sub}</p>
                     </div>
-                    <span className={`text-xs font-display font-bold whitespace-nowrap ${subText}`}>{t.minHours}h+</span>
+                    <span className={`text-xs font-display font-bold whitespace-nowrap ${subText}`}>{range}</span>
                   </div>
                 )
               })}

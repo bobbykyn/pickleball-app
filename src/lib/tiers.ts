@@ -1,9 +1,10 @@
 // Pickle Kitchen "chef brigade" rank system, based on cumulative court time.
-// Ranks climb the real kitchen hierarchy: dishwasher → master chef.
+// Ranks climb the kitchen hierarchy: 洗碗 (dishwasher) → 米芝蓮之星 (Michelin star).
 
 export interface Tier {
-  name: string
-  sub: string        // brigade title / flavour text
+  name: string       // English rank name
+  zh: string         // Chinese rank name
+  sub: string        // flavour text
   emoji: string
   minHours: number   // hours required to reach this tier
   color: string      // accent colour (hex)
@@ -11,14 +12,13 @@ export interface Tier {
 
 // Ordered ascending by minHours.
 export const TIERS: Tier[] = [
-  { name: 'Dishwasher',     sub: 'Plongeur · everyone starts here', emoji: '🧽', minHours: 0,   color: '#94A3B8' },
-  { name: 'Prep Cook',      sub: 'Commis · learning the ropes',     emoji: '🔪', minHours: 5,   color: '#64748B' },
-  { name: 'Line Cook',      sub: 'Cuisinier · holds a station',     emoji: '🍳', minHours: 15,  color: '#3F8E7C' },
-  { name: 'Chef de Partie', sub: 'Station boss',                    emoji: '🧑‍🍳', minHours: 30,  color: '#2A6A5A' },
-  { name: 'Sous Chef',      sub: 'Second-in-command',               emoji: '🥘', minHours: 55,  color: '#C0392B' },
-  { name: 'Head Chef',      sub: 'Chef de Cuisine · runs the pass', emoji: '👨‍🍳', minHours: 90,  color: '#A52F22' },
-  { name: 'Executive Chef', sub: 'Le patron',                       emoji: '⭐', minHours: 140, color: '#F2A900' },
-  { name: 'Master Chef',    sub: 'Grand Chef · the legend',         emoji: '🏆', minHours: 200, color: '#D4A017' },
+  { name: 'Dishwasher',     zh: '洗碗',       sub: 'Everyone starts at the sink',  emoji: '🧽', minHours: 0,   color: '#94A3B8' },
+  { name: 'Kitchen Hand',   zh: '打雜',       sub: 'Odd jobs around the kitchen',  emoji: '🧹', minHours: 15,  color: '#64748B' },
+  { name: 'Junior Chef',    zh: '見習廚師',   sub: 'Learning the craft',           emoji: '🔪', minHours: 50,  color: '#3F8E7C' },
+  { name: 'Sous Chef',      zh: '副廚',       sub: 'Second-in-command',            emoji: '🥘', minHours: 100, color: '#2A6A5A' },
+  { name: 'Head Chef',      zh: '主廚',       sub: 'Runs the pass',                emoji: '👨‍🍳', minHours: 200, color: '#C0392B' },
+  { name: 'Executive Chef', zh: '行政總廚',   sub: 'Le patron',                    emoji: '⭐', minHours: 300, color: '#F2A900' },
+  { name: 'Michelin Star',  zh: '米芝蓮之星', sub: 'A legend of the kitchen',      emoji: '🌟', minHours: 500, color: '#D4A017' },
 ]
 
 export interface TierProgress {

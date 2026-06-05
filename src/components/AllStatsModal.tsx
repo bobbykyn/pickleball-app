@@ -51,7 +51,6 @@ export default function AllStatsModal({ isOpen, onClose, darkMode, user }: AllSt
 
   const cardBg = darkMode ? 'bg-gray-700/50' : 'bg-gray-50'
   const subText = darkMode ? 'text-gray-400' : 'text-gray-500'
-  const medal = (i: number) => (i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`)
   const topBoard = board.slice(0, 15)
   const myInTop = myRank >= 0 && myRank < 15
 
@@ -65,13 +64,16 @@ export default function AllStatsModal({ isOpen, onClose, darkMode, user }: AllSt
 
   const Row = ({ e, place }: { e: any; place: number }) => {
     const isMe = e.id === user?.id
+    const t = getTier(e.hours).tier
     return (
       <div className={`flex items-center gap-3 px-2.5 py-2 rounded-lg ${isMe ? 'bg-brand-primary/15 ring-1 ring-brand-primary/40' : ''}`}>
-        <span className={`w-7 text-center text-sm font-display font-bold ${place < 3 ? '' : subText}`}>{medal(place)}</span>
+        <span className={`w-6 text-center text-sm font-display font-bold ${place < 3 ? 'text-brand-primary' : subText}`}>{place + 1}</span>
         <UserAvatar profile={{ name: e.name, ...(e.profile || {}) }} size="sm" />
-        <span className={`flex-1 text-sm font-medium truncate ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
-          <span title={getTier(e.hours).tier.name}>{getTier(e.hours).tier.emoji}</span> {e.name}{isMe ? ' (you)' : ''}
-        </span>
+        <div className="flex-1 min-w-0 flex items-center gap-1.5">
+          <span className={`text-sm font-medium truncate ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{e.name}{isMe ? ' (you)' : ''}</span>
+          <span className={`${subText} opacity-50`}>|</span>
+          <span className="text-xs font-semibold whitespace-nowrap" style={{ color: t.color }}>{t.name}</span>
+        </div>
         <div className="text-right">
           <p className="text-sm font-display font-bold text-brand-primary leading-none">{e.hours}h</p>
           <p className={`text-[10px] ${subText}`}>{e.games} game{e.games === 1 ? '' : 's'}</p>
@@ -108,12 +110,35 @@ export default function AllStatsModal({ isOpen, onClose, darkMode, user }: AllSt
               <Tile icon={<MapPin className="w-4 h-4" />} label="Venues" value={String(comm.totalVenues)} sub="courts used" />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <Tile icon={<MapPin className="w-4 h-4" />} label="Favourite court" value={comm.favoriteVenue} sub="most booked" />
+              <Tile icon={<Users className="w-4 h-4" />} label="Most players" value={`${comm.biggestSession.count}`} sub={`in one session · ${comm.biggestSession.month}`} />
               <Tile icon={<CalendarDays className="w-4 h-4" />} label="Busiest month" value={comm.busiestMonth} sub="most sessions" />
               <Tile icon={<Users className="w-4 h-4" />} label="Guests brought" value={String(comm.totalGuests)} sub="+1s all-time" />
             </div>
 
-            {/* Meaningless fun (community) */}
+            {/* Leaderboard */}
+            <div className={`p-4 rounded-lg ${cardBg}`}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="font-display text-2xl font-bold tracking-tight text-brand-primary leading-none">Who&apos;s Cooking?</h2>
+                  <h3 className="font-display text-sm font-bold uppercase tracking-wider text-brand-secondary mt-1">Kitchen Leaderboard | 排行榜</h3>
+                  <p className={`text-[11px] mb-3 ${subText}`}>All players, ranked by total court time</p>
+                </div>
+                <ChefRanksInfo darkMode={darkMode} currentTierName={myRank >= 0 ? getTier(board[myRank].hours).tier.name : undefined} />
+              </div>
+              <div className="space-y-1.5">
+                {topBoard.map((e, i) => <Row key={e.id} e={e} place={i} />)}
+                {!myInTop && myRank >= 0 && (
+                  <>
+                    <p className={`text-center text-xs ${subText}`}>· · ·</p>
+                    <Row e={board[myRank]} place={myRank} />
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Meaningless fun (community) — at the end */}
             <div className={`p-4 rounded-lg border border-dashed ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
               <h3 className="font-display text-sm font-bold uppercase tracking-wider mb-3 text-brand-gold flex items-center gap-2">
                 <Zap className="w-4 h-4" /> Totally official kitchen statistics
@@ -135,26 +160,6 @@ export default function AllStatsModal({ isOpen, onClose, darkMode, user }: AllSt
               <p className={`text-[10px] text-center mt-3 ${subText}`}>
                 <Flame className="w-3 h-3 inline mr-1" />Numbers are for bragging rights only.
               </p>
-            </div>
-
-            {/* Leaderboard */}
-            <div className={`p-4 rounded-lg ${cardBg}`}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-display text-sm font-bold uppercase tracking-wider text-brand-primary">Kitchen Leaderboard | 排行榜</h3>
-                  <p className={`text-[11px] mb-3 ${subText}`}>All players, ranked by total court time</p>
-                </div>
-                <ChefRanksInfo darkMode={darkMode} currentTierName={myRank >= 0 ? getTier(board[myRank].hours).tier.name : undefined} />
-              </div>
-              <div className="space-y-1.5">
-                {topBoard.map((e, i) => <Row key={e.id} e={e} place={i} />)}
-                {!myInTop && myRank >= 0 && (
-                  <>
-                    <p className={`text-center text-xs ${subText}`}>· · ·</p>
-                    <Row e={board[myRank]} place={myRank} />
-                  </>
-                )}
-              </div>
             </div>
           </div>
         )}
