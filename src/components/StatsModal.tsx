@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
-import { X, Trophy, Clock, CalendarDays, MapPin, Flame, Activity, Zap, Crown } from 'lucide-react'
+import { X, Trophy, Clock, CalendarDays, MapPin, Flame, Activity, Zap, Crown, Info } from 'lucide-react'
 import { format } from 'date-fns'
 import UserAvatar from './UserAvatar'
+import { TIERS, getTier } from '@/lib/tiers'
 
 interface MiniProfile {
   name?: string
@@ -27,6 +28,7 @@ const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 export default function StatsModal({ isOpen, onClose, darkMode, user, viewUserId, viewUserProfile }: StatsModalProps) {
   const [raw, setRaw] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [showTiers, setShowTiers] = useState(false)
 
   const targetId: string | undefined = viewUserId || user?.id
   const isSelf = !viewUserId || viewUserId === user?.id
@@ -148,9 +150,55 @@ export default function StatsModal({ isOpen, onClose, darkMode, user, viewUserId
 
   const maxMonth = Math.max(1, ...stats.monthSeries.map((m) => m.count))
   const maxDow = Math.max(1, ...stats.dowCounts)
+  const rank = getTier(stats.totalHours)
   const medal = (i: number) => (i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`)
   const topBoard = board.slice(0, 12)
   const targetInTop = targetRank >= 0 && targetRank < 12
+
+  const leaderboardBlock = board.length > 0 ? (
+    <div className={`p-4 rounded-lg ${cardBg}`}>
+      <h3 className="font-display text-sm font-bold uppercase tracking-wider mb-1 text-brand-primary">Kitchen Leaderboard | 排行榜</h3>
+      <p className={`text-[11px] mb-4 ${subText}`}>All players, ranked by total court time</p>
+      <div className="space-y-1.5">
+        {topBoard.map((e, i) => {
+          const isTarget = e.id === targetId
+          return (
+            <div key={e.id}
+              className={`flex items-center gap-3 px-2.5 py-2 rounded-lg ${isTarget ? 'bg-brand-primary/15 ring-1 ring-brand-primary/40' : ''}`}>
+              <span className={`w-7 text-center text-sm font-display font-bold ${i < 3 ? '' : subText}`}>{medal(i)}</span>
+              <UserAvatar profile={{ name: e.name, ...(e.profile || {}) }} size="sm" />
+              <span className={`flex-1 text-sm font-medium truncate ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+                <span title={getTier(e.hours).tier.name}>{getTier(e.hours).tier.emoji}</span> {e.name}{isTarget ? ' (you)' : ''}
+              </span>
+              <div className="text-right">
+                <p className="text-sm font-display font-bold text-brand-primary leading-none">{e.hours}h</p>
+                <p className={`text-[10px] ${subText}`}>{e.games} game{e.games === 1 ? '' : 's'}</p>
+              </div>
+            </div>
+          )
+        })}
+        {!targetInTop && targetRank >= 0 && (() => {
+          const e = board[targetRank]
+          return (
+            <>
+              <p className={`text-center text-xs ${subText}`}>· · ·</p>
+              <div className="flex items-center gap-3 px-2.5 py-2 rounded-lg bg-brand-primary/15 ring-1 ring-brand-primary/40">
+                <span className="w-7 text-center text-sm font-display font-bold">{targetRank + 1}</span>
+                <UserAvatar profile={{ name: e.name, ...(e.profile || {}) }} size="sm" />
+                <span className={`flex-1 text-sm font-medium truncate ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+                  <span title={getTier(e.hours).tier.name}>{getTier(e.hours).tier.emoji}</span> {e.name} (you)
+                </span>
+                <div className="text-right">
+                  <p className="text-sm font-display font-bold text-brand-primary leading-none">{e.hours}h</p>
+                  <p className={`text-[10px] ${subText}`}>{e.games} game{e.games === 1 ? '' : 's'}</p>
+                </div>
+              </div>
+            </>
+          )
+        })()}
+      </div>
+    </div>
+  ) : null
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -172,6 +220,7 @@ export default function StatsModal({ isOpen, onClose, darkMode, user, viewUserId
           <p className={subText}>Crunching the numbers…</p>
         ) : (
           <div className="space-y-6">
+            {isSelf && leaderboardBlock}
             {stats.gamesPlayed === 0 ? (
               <div className={`text-center py-10 rounded-lg ${cardBg}`}>
                 <Trophy className={`w-10 h-10 mx-auto mb-3 ${subText}`} />
@@ -193,6 +242,38 @@ export default function StatsModal({ isOpen, onClose, darkMode, user, viewUserId
                     </div>
                   </div>
                 )}
+
+                {/* Chef Rank */}
+                <div className={`relative p-4 rounded-lg ${cardBg}`}>
+                  <button
+                    type="button"
+                    onClick={() => setShowTiers(true)}
+                    title="See all chef ranks"
+                    className={`absolute top-3 right-3 ${subText} hover:text-brand-primary transition-colors`}
+                  >
+                    <Info className="w-4 h-4" />
+                  </button>
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl leading-none">{rank.tier.emoji}</span>
+                    <div className="min-w-0">
+                      <p className="font-display text-lg font-bold leading-tight" style={{ color: rank.tier.color }}>
+                        {rank.tier.name}
+                      </p>
+                      <p className={`text-xs ${subText}`}>{rank.tier.sub}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <div className="h-2.5 rounded-full bg-black/10 overflow-hidden">
+                      <div className="h-full rounded-full transition-all"
+                        style={{ width: `${rank.progress * 100}%`, backgroundColor: rank.tier.color }} />
+                    </div>
+                    <p className={`text-[11px] mt-1.5 ${subText}`}>
+                      {rank.next
+                        ? `${rank.hoursToNext}h of court time to ${rank.next.emoji} ${rank.next.name}`
+                        : 'Top rank achieved — you run this kitchen 👑'}
+                    </p>
+                  </div>
+                </div>
 
                 {/* Headline tiles */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -266,55 +347,49 @@ export default function StatsModal({ isOpen, onClose, darkMode, user, viewUserId
                 </div>
               </>
             )}
-
-            {/* Kitchen Leaderboard — always shown */}
-            {board.length > 0 && (
-              <div className={`p-4 rounded-lg ${cardBg}`}>
-                <h3 className="font-display text-sm font-bold uppercase tracking-wider mb-1 text-brand-primary">Kitchen Leaderboard | 排行榜</h3>
-                <p className={`text-[11px] mb-4 ${subText}`}>Ranked by total court time</p>
-                <div className="space-y-1.5">
-                  {topBoard.map((e, i) => {
-                    const isTarget = e.id === targetId
-                    return (
-                      <div key={e.id}
-                        className={`flex items-center gap-3 px-2.5 py-2 rounded-lg ${isTarget ? 'bg-brand-primary/15 ring-1 ring-brand-primary/40' : ''}`}>
-                        <span className={`w-7 text-center text-sm font-display font-bold ${i < 3 ? '' : subText}`}>{medal(i)}</span>
-                        <UserAvatar profile={{ name: e.name, ...(e.profile || {}) }} size="sm" />
-                        <span className={`flex-1 text-sm font-medium truncate ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
-                          {e.name}{isTarget ? ' (you)' : ''}
-                        </span>
-                        <div className="text-right">
-                          <p className="text-sm font-display font-bold text-brand-primary leading-none">{e.hours}h</p>
-                          <p className={`text-[10px] ${subText}`}>{e.games} game{e.games === 1 ? '' : 's'}</p>
-                        </div>
-                      </div>
-                    )
-                  })}
-                  {!targetInTop && targetRank >= 0 && (
-                    <>
-                      <p className={`text-center text-xs ${subText}`}>· · ·</p>
-                      {(() => {
-                        const e = board[targetRank]
-                        return (
-                          <div className="flex items-center gap-3 px-2.5 py-2 rounded-lg bg-brand-primary/15 ring-1 ring-brand-primary/40">
-                            <span className="w-7 text-center text-sm font-display font-bold">{targetRank + 1}</span>
-                            <UserAvatar profile={{ name: e.name, ...(e.profile || {}) }} size="sm" />
-                            <span className={`flex-1 text-sm font-medium truncate ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{e.name} (you)</span>
-                            <div className="text-right">
-                              <p className="text-sm font-display font-bold text-brand-primary leading-none">{e.hours}h</p>
-                              <p className={`text-[10px] ${subText}`}>{e.games} game{e.games === 1 ? '' : 's'}</p>
-                            </div>
-                          </div>
-                        )
-                      })()}
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
+            {!isSelf && leaderboardBlock}
           </div>
         )}
       </div>
+
+      {/* Chef ranks reference */}
+      {showTiers && (
+        <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4" onClick={() => setShowTiers(false)}>
+          <div
+            className={`${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} rounded-lg p-5 w-full max-w-sm max-h-[80vh] overflow-y-auto`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="text-lg font-display font-bold uppercase tracking-wider text-brand-primary">Chef Ranks | 廚師等級</h3>
+              <button onClick={() => setShowTiers(false)} className={darkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className={`text-xs mb-4 ${subText}`}>Climb the brigade by racking up court time.</p>
+            <div className="space-y-1.5">
+              {[...TIERS].reverse().map((t) => {
+                const current = t.name === rank.tier.name
+                return (
+                  <div
+                    key={t.name}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg ${current ? 'ring-1' : ''} ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}
+                    style={current ? { boxShadow: `inset 0 0 0 1px ${t.color}` } : undefined}
+                  >
+                    <span className="text-2xl leading-none w-8 text-center">{t.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm leading-tight" style={{ color: t.color }}>
+                        {t.name}{current ? ' · you' : ''}
+                      </p>
+                      <p className={`text-[11px] ${subText} truncate`}>{t.sub}</p>
+                    </div>
+                    <span className={`text-xs font-display font-bold whitespace-nowrap ${subText}`}>{t.minHours}h+</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

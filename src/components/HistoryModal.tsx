@@ -17,7 +17,7 @@ interface HistoryModalProps {
 export default function HistoryModal({ isOpen, onClose, darkMode, user }: HistoryModalProps) {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'all' | 'created' | 'joined'>('all')
+  const [tab, setTab] = useState<'all' | 'created' | 'joined'>('joined')
 
   useEffect(() => {
     if (isOpen) {
@@ -71,9 +71,9 @@ export default function HistoryModal({ isOpen, onClose, darkMode, user }: Histor
   const filtered = tab === 'created' ? createdSessions : tab === 'joined' ? joinedSessions : sessions
 
   const tabs: { key: 'all' | 'created' | 'joined'; label: string; count: number }[] = [
-    { key: 'all', label: 'All', count: sessions.length },
-    { key: 'created', label: 'Created', count: createdSessions.length },
     { key: 'joined', label: 'Joined', count: joinedSessions.length },
+    { key: 'created', label: 'Created', count: createdSessions.length },
+    { key: 'all', label: 'All', count: sessions.length },
   ]
 
   const emptyText = tab === 'created'
