@@ -54,7 +54,7 @@ export default function Home() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('name, phone, avatar_url, google_avatar_url')
+        .select('name, phone, avatar_url, google_avatar_url, payme_link')
         .eq('id', user.id)
         .single()
 
@@ -218,11 +218,35 @@ export default function Home() {
     }
   }, [])
 
+  // Record that the user is active in the app, and re-enable notifications if
+  // their account was auto-suspended for inactivity. Defensive: if the
+  // `last_active_at` / `notifications_suspended` columns don't exist yet, ignore.
+  const recordActivity = async () => {
+    if (!user) return
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('notifications_suspended')
+        .eq('id', user.id)
+        .single()
+      if (error) return
+      const update: any = { last_active_at: new Date().toISOString() }
+      if (data?.notifications_suspended) {
+        update.wants_notifications = true
+        update.notifications_suspended = false
+      }
+      await supabase.from('profiles').update(update).eq('id', user.id)
+    } catch {
+      // non-critical
+    }
+  }
+
   // Load sessions when user changes
   useEffect(() => {
     if (user) {
       loadSessions()
       loadUserProfile()
+      recordActivity()
     }
   }, [user])
 
@@ -632,6 +656,7 @@ export default function Home() {
         onClose={() => setShowHistoryModal(false)}
         darkMode={darkMode}
         user={user}
+        userProfile={userProfile}
         />
         <StatsModal
         isOpen={showStatsModal}

@@ -2,22 +2,25 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { X, Calendar, MapPin, Users, User } from 'lucide-react'
+import { X, Calendar, MapPin, Users, User, DollarSign } from 'lucide-react'
 import { Session } from '@/types'
 import { format } from 'date-fns'
 import UserAvatar from './UserAvatar'
 import { isAdminEmail } from '@/lib/admins'
+import PaymentRequestModal from './PaymentRequestModal'
 
 interface HistoryModalProps {
   isOpen: boolean
   onClose: () => void
   darkMode: boolean
   user: any
+  userProfile?: any
 }
 
-export default function HistoryModal({ isOpen, onClose, darkMode, user }: HistoryModalProps) {
+export default function HistoryModal({ isOpen, onClose, darkMode, user, userProfile }: HistoryModalProps) {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
+  const [payingSession, setPayingSession] = useState<Session | null>(null)
   const [tab, setTab] = useState<'all' | 'created' | 'joined'>('joined')
 
   useEffect(() => {
@@ -200,19 +203,30 @@ export default function HistoryModal({ isOpen, onClose, darkMode, user }: Histor
           )
         })()}
       </div>
-      {isAdminEmail(user?.email) && (
-        <button
-          onClick={async () => {
-            if (confirm('Delete this session?')) {
-              await supabase.from('sessions').delete().eq('id', session.id)
-              loadHistoricalSessions()
-            }
-          }}
-          className="text-red-500 hover:text-red-700 ml-2"
-        >
-          <X className="w-4 h-4" /> 
-        </button>
-      )}
+      <div className="flex flex-col items-end gap-2 ml-2">
+        {session.created_by === user?.id && (
+          <button
+            onClick={() => setPayingSession(session)}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-brand-secondary/15 text-brand-secondary hover:bg-brand-secondary/25 transition-colors whitespace-nowrap"
+            title="Request payment from players"
+          >
+            <DollarSign className="w-3.5 h-3.5" /> Request Payment
+          </button>
+        )}
+        {isAdminEmail(user?.email) && (
+          <button
+            onClick={async () => {
+              if (confirm('Delete this session?')) {
+                await supabase.from('sessions').delete().eq('id', session.id)
+                loadHistoricalSessions()
+              }
+            }}
+            className="text-red-500 hover:text-red-700"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
     </div>
   </div>
 ))}
@@ -221,7 +235,15 @@ export default function HistoryModal({ isOpen, onClose, darkMode, user }: Histor
           <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>{emptyText}</p>
         )}
       </div>
+
+      <PaymentRequestModal
+        isOpen={!!payingSession}
+        onClose={() => setPayingSession(null)}
+        darkMode={darkMode}
+        session={payingSession}
+        defaultLink={userProfile?.payme_link}
+      />
     </div>
   )
-  
+
 }

@@ -16,6 +16,7 @@ interface ProfileModalProps {
 export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }: ProfileModalProps) {
   const [displayName, setDisplayName] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
+  const [paymeLink, setPaymeLink] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [googleAvatarUrl, setGoogleAvatarUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -34,7 +35,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('name, phone, avatar_url, google_avatar_url')
+        .select('name, phone, avatar_url, google_avatar_url, payme_link')
         .eq('id', user.id)
         .single()
 
@@ -46,6 +47,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
       if (data) {
         setDisplayName(data.name || '')
         setPhoneNumber(data.phone || '')
+        setPaymeLink(data.payme_link || '')
         setAvatarUrl(data.avatar_url || null)
         setGoogleAvatarUrl(data.google_avatar_url || null)
       }
@@ -126,6 +128,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
           .update({
             name: displayName || null,
             phone: phoneNumber || null,
+            payme_link: paymeLink || null,
             avatar_url: avatarUrl,
           })
           .eq('id', user.id)
@@ -140,6 +143,7 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
             email: user.email,
             name: displayName || null,
             phone: phoneNumber || null,
+            payme_link: paymeLink || null,
             avatar_url: avatarUrl,
             google_avatar_url: null
           })
@@ -246,6 +250,22 @@ export default function ProfileModal({ isOpen, onClose, user, onProfileUpdated }
             />
             <p className="text-xs text-gray-500 mt-1">
               For WhatsApp notifications (coming soon)
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              💰 Payment link (PayMe / FPS)
+            </label>
+            <input
+              type="text"
+              placeholder="Paste your PayMe link (optional)"
+              value={paymeLink}
+              onChange={(e) => setPaymeLink(e.target.value)}
+              className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Used to request payment from players after sessions you host
             </p>
           </div>
 
