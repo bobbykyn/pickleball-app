@@ -18,30 +18,32 @@ interface AllStatsModalProps {
 export default function AllStatsModal({ isOpen, onClose, darkMode, user }: AllStatsModalProps) {
   const [raw, setRaw] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (isOpen) {
-      setLoading(true)
-      loadData()
-    }
+    if (!isOpen) return
+    let active = true
+    setLoading(true)
+    setError(null)
+    ;(async () => {
+      try {
+        const now = new Date().toISOString()
+        const { data, error } = await supabase
+          .from('sessions')
+          .select('id, date_time, duration_hours, location, created_by, rsvps(user_id, status, guest_count, profiles(name, avatar_url, google_avatar_url))')
+          .lt('date_time', now)
+          .order('date_time', { ascending: false })
+        if (error) throw error
+        if (active) setRaw(data || [])
+      } catch (e: any) {
+        console.error('Error loading all stats:', e)
+        if (active) setError(e?.message || 'Could not load stats')
+      } finally {
+        if (active) setLoading(false)
+      }
+    })()
+    return () => { active = false }
   }, [isOpen])
-
-  const loadData = async () => {
-    try {
-      const now = new Date().toISOString()
-      const { data, error } = await supabase
-        .from('sessions')
-        .select('id, date_time, duration_hours, location, created_by, rsvps(user_id, status, guest_count, profiles(name, avatar_url, google_avatar_url))')
-        .lt('date_time', now)
-        .order('date_time', { ascending: false })
-      if (error) throw error
-      setRaw(data || [])
-    } catch (e) {
-      console.error('Error loading all stats:', e)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const board = useMemo(() => computeLeaderboard(raw), [raw])
   const comm = useMemo(() => computeCommunityStats(raw), [raw])
@@ -93,8 +95,10 @@ export default function AllStatsModal({ isOpen, onClose, darkMode, user }: AllSt
         </div>
         <p className={`text-xs mb-6 ${subText}`}>Everything the whole kitchen has cooked up together.</p>
 
-        {loading ? (
+        {loading && raw.length === 0 ? (
           <p className={subText}>Crunching the numbers…</p>
+        ) : error && raw.length === 0 ? (
+          <p className="text-red-500 text-sm">Couldn&apos;t load stats: {error}</p>
         ) : board.length === 0 ? (
           <div className={`text-center py-10 rounded-lg ${cardBg}`}>
             <Trophy className={`w-10 h-10 mx-auto mb-3 ${subText}`} />

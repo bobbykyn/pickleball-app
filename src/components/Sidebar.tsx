@@ -1,7 +1,8 @@
 'use client'
 
 import { User } from '@supabase/supabase-js'
-import { X, User as UserIcon, Bell, Moon, Sun, Calendar, BarChart3, Users } from 'lucide-react'
+import { X, User as UserIcon, Bell, Moon, Sun, Calendar, BarChart3, Users, Shield } from 'lucide-react'
+import { isAdminEmail } from '@/lib/admins'
 import { useState, useEffect } from 'react'
 
 interface SidebarProps {
@@ -15,6 +16,7 @@ interface SidebarProps {
   onOpenHistory?: () => void
   onOpenStats?: () => void
   onOpenAllStats?: () => void
+  onOpenAdmin?: () => void
 }
 
 export default function Sidebar({ 
@@ -27,7 +29,8 @@ export default function Sidebar({
   onOpenProfile,
   onOpenHistory,
   onOpenStats,
-  onOpenAllStats
+  onOpenAllStats,
+  onOpenAdmin
 }: SidebarProps) {
   const [mounted, setMounted] = useState(false)
 
@@ -190,6 +193,23 @@ export default function Sidebar({
                 </button>
                 <p className={`text-xs mt-1 ml-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Community totals & leaderboard</p>
               </div>
+
+              {/* Admin — User Management (admins only) */}
+              {isAdminEmail(user?.email) && (
+                <div className={`p-4 rounded-lg border ${darkMode ? 'bg-gray-700/50 border-brand-primary/40' : 'bg-gray-50 border-brand-primary/30'}`}>
+                  <button
+                    onClick={onOpenAdmin}
+                    className="w-full flex items-center justify-between"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Shield className="w-5 h-5 text-brand-primary" />
+                      <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>User Management</span>
+                    </div>
+                    <span className="text-brand-primary hover:text-brand-primary/80 text-sm font-medium">Open</span>
+                  </button>
+                  <p className={`text-xs mt-1 ml-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>View signups & remove users (admin)</p>
+                </div>
+              )}
             </div>
           </div>
 

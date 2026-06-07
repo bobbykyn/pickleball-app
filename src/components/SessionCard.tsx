@@ -5,6 +5,7 @@ import UserAvatar from './UserAvatar'
 import { Share2 } from 'lucide-react';
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { isAdminEmail } from '@/lib/admins'
 
 type AddedUser = { id: string; name: string; avatar_url?: string }
 
@@ -55,7 +56,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
   }
 
   const isCreator = currentUserId === session.created_by
-  const isAdmin = currentUserEmail === 'bobbykyn@gmail.com'
+  const isAdmin = isAdminEmail(currentUserEmail)
   const canDelete = isCreator || isAdmin
   const canEdit = isCreator || isAdmin
   

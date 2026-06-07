@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { X, Calendar, MapPin, Users, FileText, Clock } from 'lucide-react'
 import { Session } from '@/types'
+import { isAdminEmail } from '@/lib/admins'
 
 interface EditSessionModalProps {
   isOpen: boolean
@@ -129,7 +130,7 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
 
       // Check if user can edit (creator or admin)
       const isCreator = user.id === session.created_by
-      const isAdmin = user.email === 'bobbykyn@gmail.com'
+      const isAdmin = isAdminEmail(user.email)
       
       if (!isCreator && !isAdmin) {
         throw new Error('You can only edit sessions you created')

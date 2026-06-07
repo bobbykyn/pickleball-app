@@ -6,6 +6,7 @@ import { X, Calendar, MapPin, Users, User } from 'lucide-react'
 import { Session } from '@/types'
 import { format } from 'date-fns'
 import UserAvatar from './UserAvatar'
+import { isAdminEmail } from '@/lib/admins'
 
 interface HistoryModalProps {
   isOpen: boolean
@@ -199,7 +200,7 @@ export default function HistoryModal({ isOpen, onClose, darkMode, user }: Histor
           )
         })()}
       </div>
-      {user?.email === 'bobbykyn@gmail.com' && (
+      {isAdminEmail(user?.email) && (
         <button
           onClick={async () => {
             if (confirm('Delete this session?')) {

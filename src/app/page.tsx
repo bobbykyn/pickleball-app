@@ -21,6 +21,7 @@ import MobileCalendarView from '@/components/MobileCalendarView' */}
 import HistoryModal from '@/components/HistoryModal'
 import StatsModal from '@/components/StatsModal'
 import AllStatsModal from '@/components/AllStatsModal'
+import AdminModal from '@/components/AdminModal'
 import MobileCalendarSwiper from '@/components/MobileCalendarSwiper'
 
 export default function Home() {
@@ -42,6 +43,7 @@ export default function Home() {
   const [showStatsModal, setShowStatsModal] = useState(false)
   const [statsView, setStatsView] = useState<{ id: string; profile?: any } | null>(null)
   const [showAllStatsModal, setShowAllStatsModal] = useState(false)
+  const [showAdminModal, setShowAdminModal] = useState(false)
   const [rsvpLoading, setRsvpLoading] = useState<string | null>(null)
 
 
@@ -620,6 +622,10 @@ export default function Home() {
           setShowSidebar(false)
           setShowAllStatsModal(true)
         }}
+        onOpenAdmin={() => {
+          setShowSidebar(false)
+          setShowAdminModal(true)
+        }}
         />
         <HistoryModal
         isOpen={showHistoryModal}
@@ -638,6 +644,12 @@ export default function Home() {
         <AllStatsModal
         isOpen={showAllStatsModal}
         onClose={() => setShowAllStatsModal(false)}
+        darkMode={darkMode}
+        user={user}
+        />
+        <AdminModal
+        isOpen={showAdminModal}
+        onClose={() => setShowAdminModal(false)}
         darkMode={darkMode}
         user={user}
         />

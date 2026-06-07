@@ -30,33 +30,35 @@ const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 export default function StatsModal({ isOpen, onClose, darkMode, user, viewUserId, viewUserProfile }: StatsModalProps) {
   const [raw, setRaw] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const targetId: string | undefined = viewUserId || user?.id
   const isSelf = !viewUserId || viewUserId === user?.id
 
   useEffect(() => {
-    if (isOpen) {
-      setLoading(true)
-      loadData()
-    }
+    if (!isOpen) return
+    let active = true
+    setLoading(true)
+    setError(null)
+    ;(async () => {
+      try {
+        const now = new Date().toISOString()
+        const { data, error } = await supabase
+          .from('sessions')
+          .select('id, date_time, duration_hours, location, created_by, rsvps(user_id, status, guest_count, profiles(name, avatar_url, google_avatar_url))')
+          .lt('date_time', now)
+          .order('date_time', { ascending: false })
+        if (error) throw error
+        if (active) setRaw(data || [])
+      } catch (e: any) {
+        console.error('Error loading stats:', e)
+        if (active) setError(e?.message || 'Could not load stats')
+      } finally {
+        if (active) setLoading(false)
+      }
+    })()
+    return () => { active = false }
   }, [isOpen])
-
-  const loadData = async () => {
-    try {
-      const now = new Date().toISOString()
-      const { data, error } = await supabase
-        .from('sessions')
-        .select('id, date_time, duration_hours, location, created_by, rsvps(user_id, status, guest_count, profiles(name, avatar_url, google_avatar_url))')
-        .lt('date_time', now)
-        .order('date_time', { ascending: false })
-      if (error) throw error
-      setRaw(data || [])
-    } catch (e) {
-      console.error('Error loading stats:', e)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // ---- Personal stats for the target user ----
   const stats = useMemo(() => {
@@ -145,8 +147,10 @@ export default function StatsModal({ isOpen, onClose, darkMode, user, viewUserId
         </div>
         <p className={`text-xs mb-6 ${subText}`}>GEAR UP. PLAY WELL. LIVE MORE.</p>
 
-        {loading ? (
+        {loading && raw.length === 0 ? (
           <p className={subText}>Crunching the numbers…</p>
+        ) : error && raw.length === 0 ? (
+          <p className="text-red-500 text-sm">Couldn&apos;t load stats: {error}</p>
         ) : (
           <div className="space-y-6">
             {stats.gamesPlayed === 0 ? (

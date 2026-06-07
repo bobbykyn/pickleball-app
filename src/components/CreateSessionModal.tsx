@@ -22,22 +22,12 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
     return `${year}-${month}-${day}T${hours}:${minutes}`
   }
 
-  // Smart default date/time
+  // Smart default date/time — next Friday at 6 PM (year derived from today)
   const getDefaultDateTime = () => {
-    const now = new Date()
-    const currentYear = now.getFullYear()
-    const currentMonth = now.getMonth()
-
-    // Use 2025 until Jan 1, 2026, then use 2026
-    const defaultYear = (currentYear === 2025 && currentMonth === 11) ? 2026 : 2025
-    
-    // Set to next Friday at 6 PM as default
     const nextFriday = new Date()
-    nextFriday.setFullYear(defaultYear)
     const daysUntilFriday = (5 - nextFriday.getDay() + 7) % 7 || 7
     nextFriday.setDate(nextFriday.getDate() + daysUntilFriday)
     nextFriday.setHours(18, 0, 0, 0) // 6 PM
-    
     return toLocalDateTimeString(nextFriday)
   }
 
