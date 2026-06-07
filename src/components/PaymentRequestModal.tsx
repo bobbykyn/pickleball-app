@@ -11,6 +11,7 @@ interface PaymentRequestModalProps {
   darkMode: boolean
   session: Session | null
   defaultLink?: string
+  onShared?: () => void
 }
 
 interface Payer {
@@ -19,7 +20,7 @@ interface Payer {
   amount: string
 }
 
-export default function PaymentRequestModal({ isOpen, onClose, darkMode, session, defaultLink }: PaymentRequestModalProps) {
+export default function PaymentRequestModal({ isOpen, onClose, darkMode, session, defaultLink, onShared }: PaymentRequestModalProps) {
   const [link, setLink] = useState('')
   const [bulk, setBulk] = useState('')
   const [payers, setPayers] = useState<Payer[]>([])
@@ -90,7 +91,10 @@ export default function PaymentRequestModal({ isOpen, onClose, darkMode, session
   const subText = darkMode ? 'text-gray-400' : 'text-gray-500'
   const inputCls = `w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary`
 
-  const shareWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank')
+  const shareWhatsApp = () => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank')
+    onShared?.()
+  }
   const copyMessage = async () => {
     try {
       await navigator.clipboard.writeText(message)

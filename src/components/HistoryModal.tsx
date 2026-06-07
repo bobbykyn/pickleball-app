@@ -204,7 +204,7 @@ export default function HistoryModal({ isOpen, onClose, darkMode, user, userProf
         })()}
       </div>
       <div className="flex flex-col items-end gap-2 ml-2">
-        {session.created_by === user?.id && (
+        {(session.created_by === user?.id || isAdminEmail(user?.email)) && (
           <button
             onClick={() => setPayingSession(session)}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-brand-secondary/15 text-brand-secondary hover:bg-brand-secondary/25 transition-colors whitespace-nowrap"

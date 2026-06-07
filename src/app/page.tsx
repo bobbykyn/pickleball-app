@@ -12,7 +12,7 @@ import CalendarView from '@/components/CalendarView'
 import { Session, RSVP } from '@/types'
 import Sidebar from '../components/Sidebar'
 import BrandLogo from '../components/BrandLogo'
-import { Settings } from 'lucide-react'
+import { Settings, DollarSign, X } from 'lucide-react'
 import { format, addMonths } from 'date-fns'
 
 {/* import { useSwipeable } from 'react-swipeable'
@@ -22,6 +22,7 @@ import HistoryModal from '@/components/HistoryModal'
 import StatsModal from '@/components/StatsModal'
 import AllStatsModal from '@/components/AllStatsModal'
 import AdminModal from '@/components/AdminModal'
+import PaymentRequestModal from '@/components/PaymentRequestModal'
 import MobileCalendarSwiper from '@/components/MobileCalendarSwiper'
 
 export default function Home() {
@@ -44,6 +45,9 @@ export default function Home() {
   const [statsView, setStatsView] = useState<{ id: string; profile?: any } | null>(null)
   const [showAllStatsModal, setShowAllStatsModal] = useState(false)
   const [showAdminModal, setShowAdminModal] = useState(false)
+  const [recentEnded, setRecentEnded] = useState<Session[]>([])
+  const [paymentSession, setPaymentSession] = useState<Session | null>(null)
+  const [paymentDone, setPaymentDone] = useState<string[]>([])
   const [rsvpLoading, setRsvpLoading] = useState<string | null>(null)
 
 
@@ -241,12 +245,54 @@ export default function Home() {
     }
   }
 
+  // Recently-ended sessions THIS user created (last 24h) — for the payment prompt
+  const loadRecentEndedForCreator = async () => {
+    if (!user) return
+    try {
+      const now = new Date()
+      const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      const { data, error } = await supabase
+        .from('sessions')
+        .select(`
+          *,
+          profiles!sessions_created_by_fkey(name, avatar_url, google_avatar_url),
+          rsvps(*, profiles(name, avatar_url, google_avatar_url))
+        `)
+        .eq('created_by', user.id)
+        .lt('date_time', now.toISOString())
+        .gt('date_time', dayAgo.toISOString())
+        .order('date_time', { ascending: false })
+      if (error) throw error
+      setRecentEnded(data || [])
+    } catch (e) {
+      console.error('Error loading recent ended sessions:', e)
+    }
+  }
+
+  const markPaymentDone = (sessionId: string) => {
+    setPaymentDone((prev) => {
+      if (prev.includes(sessionId)) return prev
+      const next = [...prev, sessionId]
+      try { localStorage.setItem('pk_payment_done', JSON.stringify(next)) } catch {}
+      return next
+    })
+  }
+
+  // Restore dismissed/used payment prompts
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('pk_payment_done')
+      if (saved) setPaymentDone(JSON.parse(saved))
+    } catch {}
+  }, [])
+
   // Load sessions when user changes
   useEffect(() => {
     if (user) {
       loadSessions()
       loadUserProfile()
       recordActivity()
+      loadRecentEndedForCreator()
     }
   }, [user])
 
@@ -509,6 +555,46 @@ export default function Home() {
       {/* Main Content */}
       {user ? (
         <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+          {/* Post-game payment prompt (session creator only, last 24h, until used/dismissed) */}
+          {(() => {
+            const pending = recentEnded.filter((s) => !paymentDone.includes(s.id))
+            if (pending.length === 0) return null
+            return (
+              <div className="mb-6 rounded-lg border border-brand-secondary/40 bg-brand-secondary/10 p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <DollarSign className="w-5 h-5 text-brand-secondary" />
+                  <h3 className="font-display text-sm font-bold uppercase tracking-wider text-brand-secondary">Collect for your recent game</h3>
+                </div>
+                <p className="text-xs text-foreground/60 mb-3">Your session just wrapped — send a payment request before it slips your mind.</p>
+                <div className="space-y-2">
+                  {pending.map((s) => (
+                    <div key={s.id} className="flex items-center justify-between gap-2 rounded-lg bg-card-bg/60 border border-brand-border px-3 py-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">{s.title}</p>
+                        <p className="text-xs text-foreground/60">{format(new Date(s.date_time), 'EEE, MMM d · h:mm a')}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button
+                          onClick={() => setPaymentSession(s)}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-secondary text-white hover:bg-brand-secondary/90 transition-colors whitespace-nowrap"
+                        >
+                          <DollarSign className="w-3.5 h-3.5" /> Request Payment
+                        </button>
+                        <button
+                          onClick={() => markPaymentDone(s.id)}
+                          className="p-1.5 text-foreground/40 hover:text-foreground/70"
+                          title="Dismiss"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+
           <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
             {/* Left Column - Calendar - Hidden on mobile, shown on desktop */}
             <div className="hidden lg:block w-80 flex-shrink-0">
@@ -677,6 +763,14 @@ export default function Home() {
         onClose={() => setShowAdminModal(false)}
         darkMode={darkMode}
         user={user}
+        />
+        <PaymentRequestModal
+        isOpen={!!paymentSession}
+        onClose={() => setPaymentSession(null)}
+        darkMode={darkMode}
+        session={paymentSession}
+        defaultLink={userProfile?.payme_link}
+        onShared={() => { if (paymentSession) markPaymentDone(paymentSession.id) }}
         />
     </div>
   )
