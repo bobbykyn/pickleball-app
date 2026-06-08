@@ -132,8 +132,6 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
 
   const totalGuestSeats = (session.rsvps || []).reduce((sum, r) => sum + (r.status === 'yes' ? (r.guest_count || 0) : 0), 0)
   const attendeeCount = (yesRSVPs.length + totalGuestSeats) || 1
-  const totalCost = session.total_cost || 0
-  const costPerPerson = totalCost / attendeeCount
   const isPeakTime = session.is_peak_time
   const durationHours = session.duration_hours || 1
 

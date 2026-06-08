@@ -97,15 +97,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'No recipients want RSVP notifications' })
     }
 
-    // Calculate new cost per person
     const attendeeCount = (session.rsvps?.filter((r: any) => r.status === 'yes').length || 0) + 1
-    const costPerPerson = (session.total_cost || 0) / attendeeCount
 
 // In send-rsvp-email/route.ts, after calculating uniqueRecipients (around line 90-95)
 if (process.env.DISABLE_EMAIL_NOTIFICATIONS === 'true') {
   console.log('📧 RSVP DEBUG - Would notify:', uniqueRecipients)
   console.log('New member:', newMemberName, 'joined:', session.title)
-  console.log('New cost per person: $', costPerPerson.toFixed(2))
   return NextResponse.json({ 
     success: true, 
     message: 'RSVP notifications disabled - check logs',
@@ -151,11 +148,7 @@ if (process.env.DISABLE_EMAIL_NOTIFICATIONS === 'true') {
                 <div style="margin: 15px 0;">
                   <strong>📍 Where:</strong> ${session.location}
                 </div>
-                
-                <div style="margin: 15px 0; font-size: 18px; color: #0f766e;">
-                  <strong>💰 New Cost: $${costPerPerson.toFixed(2)} per person</strong>
-                </div>
-                
+
                 <div style="margin: 15px 0;">
                   <strong>👥 Players:</strong> ${attendeeCount}/${session.max_players}
                 </div>

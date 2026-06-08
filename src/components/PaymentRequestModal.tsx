@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { X, Copy, Check } from 'lucide-react'
+import { X, Copy, Check, Info } from 'lucide-react'
 import { format } from 'date-fns'
 import { Session } from '@/types'
 
@@ -22,18 +22,12 @@ interface Payer {
 
 export default function PaymentRequestModal({ isOpen, onClose, darkMode, session, defaultLink, onShared }: PaymentRequestModalProps) {
   const [link, setLink] = useState('')
-  const [bulk, setBulk] = useState('')
+  const [totalCost, setTotalCost] = useState('')
+  const [totalError, setTotalError] = useState(false)
+  const [showInfo, setShowInfo] = useState(false)
   const [payers, setPayers] = useState<Payer[]>([])
   const [copied, setCopied] = useState(false)
   const [initialised, setInitialised] = useState<string | null>(null)
-
-  // Suggested per-head amount from the stored cost, if any
-  const suggestion = useMemo(() => {
-    const yes = session?.rsvps?.filter((r) => r.status === 'yes') || []
-    const heads = yes.reduce((n, r) => n + 1 + (r.guest_count || 0), 0)
-    const total = (session as any)?.total_cost || 0
-    return total && heads ? String(Math.ceil(total / heads)) : ''
-  }, [session])
 
   const buildPayers = (s: Session, amt: string): Payer[] => {
     const rows: Payer[] = []
@@ -53,16 +47,26 @@ export default function PaymentRequestModal({ isOpen, onClose, darkMode, session
   // Initialise once per session opening
   if (isOpen && session && initialised !== session.id) {
     setLink(defaultLink || '')
-    setBulk(suggestion)
-    setPayers(buildPayers(session, suggestion))
+    setTotalCost('')
+    setTotalError(false)
+    setPayers(buildPayers(session, ''))
     setInitialised(session.id)
     setCopied(false)
   }
   if (!isOpen && initialised !== null) setInitialised(null)
 
-  const applyBulk = (val: string) => {
-    setBulk(val)
-    setPayers((prev) => prev.map((p) => ({ ...p, amount: val })))
+  // Total cost → split evenly across every head (players + guests)
+  const applyTotal = (val: string) => {
+    setTotalCost(val)
+    const cleaned = val.trim()
+    if (cleaned === '') { setTotalError(false); return }
+    // Only digits with an optional single decimal point are allowed
+    if (!/^\d*\.?\d*$/.test(cleaned)) { setTotalError(true); return }
+    setTotalError(false)
+    const num = parseFloat(cleaned)
+    if (isNaN(num) || payers.length === 0) return
+    const per = String(Math.ceil(num / payers.length)) // round up to whole dollars
+    setPayers((prev) => prev.map((p) => ({ ...p, amount: per })))
   }
   const setOne = (id: string, val: string) => {
     setPayers((prev) => prev.map((p) => (p.id === id ? { ...p, amount: val } : p)))
@@ -122,9 +126,31 @@ export default function PaymentRequestModal({ isOpen, onClose, darkMode, session
           </div>
 
           <div>
-            <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Amount each (fills everyone)</label>
-            <input type="text" inputMode="decimal" placeholder="e.g. 80" value={bulk} onChange={(e) => applyBulk(e.target.value)} className={inputCls} />
-            <p className={`text-xs mt-1 ${subText}`}>Then tweak anyone who owes a different amount below.</p>
+            <div className="flex items-center gap-1.5 mb-1">
+              <label className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Total cost</label>
+              <button type="button" onClick={() => setShowInfo((v) => !v)} className={`${subText} hover:text-brand-primary transition-colors`} title="How splitting works">
+                <Info className="w-4 h-4" />
+              </button>
+            </div>
+            {showInfo && (
+              <p className={`text-xs mb-2 rounded-lg p-2 ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                Enter the total court cost and we&apos;ll split it evenly across all {payers.length} {payers.length === 1 ? 'player' : 'players'} (guests count too),
+                rounded up to the nearest dollar. Then adjust anyone who owes a different amount in the list below before sending.
+              </p>
+            )}
+            <input
+              type="text"
+              inputMode="decimal"
+              placeholder="e.g. 240"
+              value={totalCost}
+              onChange={(e) => applyTotal(e.target.value)}
+              className={`${inputCls} ${totalError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+            />
+            {totalError ? (
+              <p className="text-xs mt-1 text-red-500">Please enter numbers only (e.g. 240).</p>
+            ) : (
+              <p className={`text-xs mt-1 ${subText}`}>Splits evenly across {payers.length} {payers.length === 1 ? 'player' : 'players'} — tweak individuals below.</p>
+            )}
           </div>
 
           <div>
