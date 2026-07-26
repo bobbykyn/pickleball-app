@@ -490,11 +490,25 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-        <div className="text-center">
-          <h1 className="text-3xl md:text-4xl font-display font-bold tracking-wider text-brand-primary mb-4">匹克廚房 • PICKLE KITCHEN</h1>
-          <p className="text-sm font-medium opacity-70 uppercase tracking-widest">Loading...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground px-6">
+        <div className="animate-brand-rise">
+          <BrandLogo size="md" />
         </div>
+
+        {/* Indeterminate sweep */}
+        <div
+          className="mt-10 w-40 h-[3px] rounded-full bg-brand-border overflow-hidden animate-brand-rise"
+          style={{ animationDelay: '0.12s' }}
+        >
+          <div className="h-full w-1/3 rounded-full bg-brand-primary animate-brand-sweep" />
+        </div>
+
+        <p
+          className="mt-4 font-display text-[10px] tracking-[0.3em] uppercase text-foreground/45 animate-brand-rise"
+          style={{ animationDelay: '0.2s' }}
+        >
+          Warming up the court
+        </p>
       </div>
     )
   }
@@ -505,21 +519,16 @@ export default function Home() {
       {user && (
       <div className="border-b-2 border-brand-border bg-card-bg/60 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-brand-primary flex items-center gap-3">
-                匹克廚房 <span className="text-base md:text-lg font-light text-foreground/70 hidden sm:inline">PICKLE KITCHEN</span>
-              </h1>
-              <p className="mt-1 text-[10px] md:text-xs font-display tracking-widest text-brand-secondary font-semibold">
-                GEAR UP. PLAY WELL. LIVE MORE. • EST. 2024
-              </p>
-              {user && (
-                <p className="mt-1 text-xs md:hidden font-medium text-foreground/60">
-                  Welcome, {userProfile?.name || user.email}
-                </p>
-              )}
-            </div>
-            
+          <div className="flex justify-between items-center gap-3">
+            {/* Crest replaces the old text lockup */}
+            <img
+              src={darkMode ? '/logo-badge.png' : '/logo-badge-light.png'}
+              alt="Pickle Kitchen — 匹克廚房, Hong Kong, est. 2024"
+              width={512}
+              height={512}
+              className="h-14 w-14 md:h-[68px] md:w-[68px] shrink-0 select-none"
+            />
+
             {user ? (
               <div className="flex items-center gap-2">
                 <span className="hidden md:block text-sm font-semibold text-foreground/75 mr-2">

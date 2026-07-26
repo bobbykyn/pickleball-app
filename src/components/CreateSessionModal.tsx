@@ -10,6 +10,45 @@ interface CreateSessionModalProps {
   selectedDate?: Date | null
 }
 
+/** Short names used when a venue appears inside an auto-generated title. */
+const VENUE_SHORT: Record<string, string> = {
+  'Pick & Match Megabox': 'Megabox',
+  'Stackd Hopewell': 'Stackd',
+  'Go Park Sai Sha': 'Go Park',
+  'Bay Pickle': 'Bay Pickle',
+  'Laguna Block 27': 'Laguna',
+}
+
+const CN_WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六']
+
+/** "31/7 (五) 7-9pm (Megabox)" — the default title when the creator leaves it blank. */
+function buildAutoTitle(dt: string, durationHours: number, loc: string, custom: string) {
+  if (!dt) return ''
+  const start = new Date(dt)
+  if (isNaN(start.getTime())) return ''
+
+  const end = new Date(start.getTime() + durationHours * 60 * 60 * 1000)
+
+  const clock = (d: Date, withMeridiem: boolean) => {
+    const mer = d.getHours() >= 12 ? 'pm' : 'am'
+    const h = d.getHours() % 12 || 12
+    const m = d.getMinutes()
+    const base = m === 0 ? `${h}` : `${h}.${String(m).padStart(2, '0')}`
+    return withMeridiem ? `${base}${mer}` : base
+  }
+
+  // Only repeat am/pm on the start time when the session crosses midday.
+  const sameHalf = (start.getHours() >= 12) === (end.getHours() >= 12)
+  const timeRange = `${clock(start, !sameHalf)}-${clock(end, true)}`
+
+  const stamp = `${start.getDate()}/${start.getMonth() + 1} (${CN_WEEKDAYS[start.getDay()]}) ${timeRange}`
+
+  const venueRaw = (loc === 'Custom Location...' ? custom : loc).trim()
+  const venue = VENUE_SHORT[venueRaw] || venueRaw
+
+  return venue ? `${stamp} (${venue})` : stamp
+}
+
 export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, selectedDate }: CreateSessionModalProps) {
   const [customLocation, setCustomLocation] = useState('')
   
@@ -66,12 +105,25 @@ const [hideCosts, setHideCosts] = useState(false)
   const [allUsers, setAllUsers] = useState<any[]>([])
   const [showUserSelector, setShowUserSelector] = useState(false)
   
-  // Load all users when modal opens
+  // One-shot hint explaining that a blank title falls back to the session details
+  const [showTitleHint, setShowTitleHint] = useState(false)
+  const [titleHintSeen, setTitleHintSeen] = useState(false)
+
+  // Load all users when modal opens; re-arm the title hint for this creation
   useEffect(() => {
     if (isOpen) {
       loadAllUsers()
+      setTitleHintSeen(false)
+      setShowTitleHint(false)
     }
   }, [isOpen])
+
+  // Auto-dismiss the hint
+  useEffect(() => {
+    if (!showTitleHint) return
+    const t = setTimeout(() => setShowTitleHint(false), 6000)
+    return () => clearTimeout(t)
+  }, [showTitleHint])
 
   // Update date when selectedDate prop changes
   useEffect(() => {
@@ -168,6 +220,11 @@ const calculateCost = (dateTime: string, durationHours: number, location: string
 
 const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, location)
 
+  // ---- Auto-generated session title ----------------------------------------
+  // Produces e.g. "31/7 (五) 7-9pm (Megabox)". Used as the live placeholder and
+  // as the saved title whenever the creator leaves the field blank.
+  const autoTitle = buildAutoTitle(dateTime, duration, location, customLocation)
+
   if (!isOpen) return null
 
   const handleCreateSession = async (e: React.FormEvent) => {
@@ -183,7 +240,8 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
       const isoDateTime = dateTime + ':00+08:00' // Hong Kong timezone (UTC+8)
       
       const sessionData: any = {
-        title,
+        // Blank title falls back to the auto-generated session details
+        title: title.trim() || autoTitle || 'Pickle Session',
         date_time: isoDateTime,
         location: location === 'Custom Location...' ? customLocation : location,
         max_players: maxPlayers,
@@ -280,19 +338,44 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
         </div>
 
         <form onSubmit={handleCreateSession} className="space-y-4">
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               <FileText className="w-4 h-4 inline mr-1" />
-              Session Title
+              Session Title <span className="font-normal text-gray-400">(optional)</span>
             </label>
             <input
               type="text"
-              placeholder="Pickle Time!"
+              placeholder={autoTitle || 'Pickle Time!'}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-500 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
-              required
+              onFocus={() => {
+                if (!titleHintSeen) {
+                  setTitleHintSeen(true)
+                  setShowTitleHint(true)
+                }
+              }}
+              className="w-full p-3 border rounded-lg text-gray-900 placeholder-gray-400 border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
             />
+
+            {showTitleHint && (
+              <div className="animate-hint-in absolute left-0 right-0 top-full mt-2 z-20">
+                <div className="relative rounded-lg border border-brand-gold/60 bg-[#FFF8E8] px-3 py-2.5 pr-8 shadow-lg">
+                  <span className="absolute -top-[7px] left-6 w-3 h-3 rotate-45 border-l border-t border-brand-gold/60 bg-[#FFF8E8]" />
+                  <p className="relative text-xs leading-relaxed text-gray-700">
+                    Leave this blank and the title becomes the session details — it updates as you pick
+                    the date, time and venue.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowTitleHint(false)}
+                    className="absolute top-1.5 right-1.5 p-1 text-gray-400 hover:text-gray-700"
+                    aria-label="Dismiss"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
