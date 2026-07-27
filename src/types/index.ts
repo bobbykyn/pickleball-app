@@ -28,6 +28,7 @@ export interface Profile {
   invited_users?: string[]
   hide_costs?: boolean
   manual_participants?: string[]
+  courts?: string[]
   profiles?: {
     name: string
     avatar_url?: string

@@ -132,6 +132,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
   const durationHours = session.duration_hours || 1
 
   const sessionDate = new Date(session.date_time)
+  const courtList = (session.courts || []).map(c => c.trim()).filter(Boolean)
   const maxPlayers = session.max_players || 8
   const takenSeats = yesRSVPs.length + totalGuestSeats
   const spotsLeft = Math.max(0, maxPlayers - takenSeats)
@@ -148,7 +149,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
       <div className="p-5 md:p-6">
 
         {/* Title — full width, nothing crowding it */}
-        <h3 className="font-display text-xl md:text-2xl font-semibold uppercase leading-[1.12] tracking-[0.01em] text-foreground">
+        <h3 className="font-display text-xl md:text-2xl font-semibold leading-[1.12] tracking-[0.01em] text-foreground">
           {session.is_private && (
             <span className="align-middle mr-2 inline-block font-sans text-[10px] tracking-wider bg-purple-600 text-white px-2 py-0.5 rounded">
               🔒 Private
@@ -219,7 +220,12 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
         {/* Location */}
         <div className="flex items-center gap-2.5 text-sm font-semibold text-foreground mb-6">
           <MapPin className="w-[17px] h-[17px] text-brand-secondary shrink-0" />
-          {session.location}
+          <span>{session.location}</span>
+          {courtList.length > 0 && (
+            <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/60 border border-brand-border rounded-[3px] px-1.5 py-0.5 shrink-0">
+              Court {courtList.join('+')}
+            </span>
+          )}
         </div>
 
         {/* Notes */}

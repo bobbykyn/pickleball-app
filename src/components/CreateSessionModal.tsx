@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { X, Calendar, MapPin, Users, FileText, Clock } from 'lucide-react'
+import CourtPicker, { formatCourts } from './CourtPicker'
 
 interface CreateSessionModalProps {
   isOpen: boolean
@@ -21,8 +22,8 @@ const VENUE_SHORT: Record<string, string> = {
 
 const CN_WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六']
 
-/** "31/7 (五) 7-9pm (Megabox)" — the default title when the creator leaves it blank. */
-function buildAutoTitle(dt: string, durationHours: number, loc: string, custom: string) {
+/** "31/7 (五) 7-9pm (Megabox) - [Court 1]" — the default when the title is blank. */
+function buildAutoTitle(dt: string, durationHours: number, loc: string, custom: string, courts: string[]) {
   if (!dt) return ''
   const start = new Date(dt)
   if (isNaN(start.getTime())) return ''
@@ -46,7 +47,7 @@ function buildAutoTitle(dt: string, durationHours: number, loc: string, custom: 
   const venueRaw = (loc === 'Custom Location...' ? custom : loc).trim()
   const venue = VENUE_SHORT[venueRaw] || venueRaw
 
-  return venue ? `${stamp} (${venue})` : stamp
+  return (venue ? `${stamp} (${venue})` : stamp) + formatCourts(courts)
 }
 
 export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, selectedDate }: CreateSessionModalProps) {
@@ -89,6 +90,8 @@ export default function CreateSessionModal({ isOpen, onClose, onSessionCreated, 
     'Laguna Block 27'
   ]
   
+  const [courts, setCourts] = useState<string[]>([])
+  const [multipleCourts, setMultipleCourts] = useState(false)
   const [maxPlayers, setMaxPlayers] = useState(8) // Fixed: Default to 8, input field instead of dropdown
   const [duration, setDuration] = useState(1.0)
   const [notes, setNotes] = useState('')
@@ -223,7 +226,7 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
   // ---- Auto-generated session title ----------------------------------------
   // Produces e.g. "31/7 (五) 7-9pm (Megabox)". Used as the live placeholder and
   // as the saved title whenever the creator leaves the field blank.
-  const autoTitle = buildAutoTitle(dateTime, duration, location, customLocation)
+  const autoTitle = buildAutoTitle(dateTime, duration, location, customLocation, courts)
 
   if (!isOpen) return null
 
@@ -251,6 +254,7 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
         cost_per_person: totalCost,
         notes: notes || null,
         created_by: user.id,
+        courts: courts.map(c => c.trim()).filter(Boolean),
         hide_costs: hideCosts,
   manual_participants: manualNames
         //venue_type: isStackd ? 'stackd_hopewell' : 'megabox'
@@ -297,6 +301,8 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
         setTitle('')
         setDateTime(getDefaultDateTime())
         setLocation('Pick & Match Megabox')
+        setCourts([])
+        setMultipleCourts(false)
         setMaxPlayers(8)
         setDuration(1.0)
         setNotes('')
@@ -421,6 +427,13 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
               </select>
             )}
           </div>
+
+          <CourtPicker
+            courts={courts}
+            onChange={setCourts}
+            multiple={multipleCourts}
+            onMultipleChange={setMultipleCourts}
+          />
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

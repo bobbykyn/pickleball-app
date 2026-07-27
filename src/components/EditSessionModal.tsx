@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { X, Calendar, MapPin, Users, FileText, Clock } from 'lucide-react'
+import CourtPicker from './CourtPicker'
 import { Session } from '@/types'
 import { isAdminEmail } from '@/lib/admins'
 
@@ -15,6 +16,8 @@ interface EditSessionModalProps {
 
 export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, session }: EditSessionModalProps) {
   const [customLocation, setCustomLocation] = useState('')
+  const [courts, setCourts] = useState<string[]>([])
+  const [multipleCourts, setMultipleCourts] = useState(false)
   const [title, setTitle] = useState('')
   const [dateTime, setDateTime] = useState('')
   const [location, setLocation] = useState('Pick & Match Megabox')
@@ -68,6 +71,10 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
         setLocation('Custom Location...')
         setCustomLocation(session.location)
       }
+      const existingCourts = (session.courts || []).map(c => c.trim()).filter(Boolean)
+      setCourts(existingCourts)
+      setMultipleCourts(existingCourts.length > 1)
+
       setMaxPlayers(session.max_players)
       setDuration(session.duration_hours || 1.0)
       setNotes(session.notes || '')
@@ -149,6 +156,7 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
         is_peak_time: isPeak,
         cost_per_person: totalCost / Math.max(1, session.rsvps?.filter(r => r.status === 'yes')?.length || 1),
         notes: notes || null,
+        courts: courts.map(c => c.trim()).filter(Boolean),
       }
 
       // Add private session fields
@@ -261,6 +269,13 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
               </select>
             )}
           </div>
+
+          <CourtPicker
+            courts={courts}
+            onChange={setCourts}
+            multiple={multipleCourts}
+            onMultipleChange={setMultipleCourts}
+          />
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
