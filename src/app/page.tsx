@@ -519,7 +519,15 @@ export default function Home() {
       {user && (
       <div className="border-b-2 border-brand-border bg-card-bg/60 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
-          <div className="flex justify-between items-center gap-3">
+          <div className="flex items-center gap-3">
+            {/* Chinese wordmark holds the left edge so the crest can sit centered.
+                flex-1 on both flanks keeps the crest optically centered. */}
+            <div className="hidden md:flex flex-1 min-w-0 items-center">
+              <span className="font-display text-base lg:text-lg tracking-[0.35em] text-brand-primary font-semibold pl-[0.35em] select-none whitespace-nowrap">
+                匹克廚房
+              </span>
+            </div>
+
             {/* Crest replaces the old text lockup */}
             <img
               src={darkMode ? '/logo-badge.png' : '/logo-badge-light.png'}
@@ -530,19 +538,19 @@ export default function Home() {
             />
 
             {user ? (
-              <div className="flex items-center gap-2">
-                <span className="hidden md:block text-sm font-semibold text-foreground/75 mr-2">
-                  Welcome, {userProfile?.name || user.email}
+              <div className="flex flex-1 min-w-0 items-center justify-end gap-2">
+                <span className="hidden md:block text-sm font-semibold text-foreground/75 mr-2 truncate">
+                  Hi, {userProfile?.name || user.email}
                 </span>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="bg-brand-primary text-white px-4 py-2.5 rounded font-display text-xs uppercase tracking-wider hover:bg-brand-primary/95 transition-all font-semibold"
+                  className="shrink-0 bg-brand-primary text-white px-4 py-2.5 rounded font-display text-xs uppercase tracking-wider hover:bg-brand-primary/95 transition-all font-semibold"
                 >
                   Create Session
                 </button>
                 <button
                   onClick={() => setShowSidebar(!showSidebar)}
-                  className="p-2 text-foreground/70 hover:bg-foreground/5 rounded-lg transition-colors"
+                  className="shrink-0 p-2 text-foreground/70 hover:bg-foreground/5 rounded-lg transition-colors"
                   title="Settings"
                 >
                   <Settings className="w-5 h-5" />
