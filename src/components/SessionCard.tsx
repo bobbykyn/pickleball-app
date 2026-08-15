@@ -5,6 +5,7 @@ import UserAvatar from './UserAvatar'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { isAdminEmail } from '@/lib/admins'
+import { APP_URL } from '@/lib/config'
 
 type AddedUser = { id: string; name: string; avatar_url?: string }
 
@@ -89,7 +90,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
       `⏰ ${timeStr}\n` +
       `📍 ${session.location}\n` +
       `👥 ${attendees} players confirmed\n\n` +
-      `Join here: https://pickleball-app-1.vercel.app/`
+      `Join here: ${APP_URL}/`
     );
 
     window.open(`https://wa.me/?text=${message}`, '_blank');

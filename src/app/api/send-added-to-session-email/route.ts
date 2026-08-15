@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
+import { APP_URL } from '@/lib/config'
 
 // Lazy init so env vars aren't required at build time (page-data collection).
 export const dynamic = 'force-dynamic'
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
                 ${session.notes ? `<p>📝 <strong>Notes:</strong> ${session.notes}</p>` : ''}
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="https://pickleball-app-1.vercel.app"
+                <a href="${APP_URL}"
                    style="background: #0f766e; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
                   View Session
                 </a>

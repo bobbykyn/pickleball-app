@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
+import { APP_URL } from '@/lib/config'
 
 // Lazy init so env vars aren't required at build time (page-data collection).
 export const dynamic = 'force-dynamic'
@@ -172,7 +173,7 @@ if (process.env.DISABLE_EMAIL_NOTIFICATIONS === 'true') {
               minute: '2-digit'
             })}</p>
             <p>📍 ${session.location}</p>
-            <a href="https://pickleball-app-1.vercel.app">Join Now</a>
+            <a href="${APP_URL}">Join Now</a>
           `
         })
         console.log('✅ Email sent successfully to:', user.email)

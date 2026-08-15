@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
+import { APP_URL } from '@/lib/config'
 
 export const dynamic = 'force-dynamic'
 
 const DORMANT_DAYS = 90 // ~3 months
-const APP_URL = 'https://pickleball-app-1.vercel.app'
 
 function getAdminClient() {
   return createClient(
