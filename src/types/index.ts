@@ -29,6 +29,9 @@ export interface Profile {
   hide_costs?: boolean
   manual_participants?: string[]
   courts?: string[]
+  requires_approval?: boolean
+  invite_only?: boolean
+  invite_token?: string | null
   profiles?: {
     name: string
     avatar_url?: string
@@ -38,7 +41,7 @@ export interface Profile {
     id: string
     session_id: string
     user_id: string
-    status: 'yes' | 'maybe' | 'no'
+    status: 'yes' | 'maybe' | 'no' | 'pending'
     created_at: string
     guest_count?: number
     guest_names?: string[]

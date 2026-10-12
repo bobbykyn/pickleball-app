@@ -1,6 +1,6 @@
 import { Session } from '@/types'
 import { format } from 'date-fns'
-import { MapPin, Trash2, Edit, Loader2, X, Plus, Minus, CalendarPlus } from 'lucide-react'
+import { MapPin, Trash2, Edit, Loader2, X, Plus, Minus, CalendarPlus, Ticket, Link2, Check, Lock, Clock } from 'lucide-react'
 import UserAvatar from './UserAvatar'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -24,9 +24,12 @@ interface SessionCardProps {
   rsvpLoading?: boolean
   darkMode?: boolean
   onViewPlayer?: (userId: string, profile?: { name?: string; avatar_url?: string | null; google_avatar_url?: string | null }) => void
+  onDecide?: (sessionId: string, userId: string, decision: 'yes' | 'no') => Promise<void> | void
 }
 
-export default function SessionCard({ session, currentUserId, currentUserEmail, onDelete, onEdit, onRSVP, rsvpLoading = false, darkMode = false, onViewPlayer }: SessionCardProps) {
+export default function SessionCard({ session, currentUserId, currentUserEmail, onDelete, onEdit, onRSVP, rsvpLoading = false, darkMode = false, onViewPlayer, onDecide }: SessionCardProps) {
+  const [linkCopied, setLinkCopied] = useState(false)
+  const [decidingId, setDecidingId] = useState<string | null>(null)
   const [joinMode, setJoinMode] = useState<'closed' | 'choose' | 'plus1' | 'plusmore'>('closed')
   const [allUsers, setAllUsers] = useState<Array<{ id: string; name: string; avatar_url?: string }>>([])
   const [picked, setPicked] = useState<AddedUser[]>([])
@@ -62,6 +65,32 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
   const canEdit = isCreator || isAdmin
 
   const yesRSVPs = session.rsvps?.filter(rsvp => rsvp.status === 'yes') || []
+  const pendingRSVPs = session.rsvps?.filter(rsvp => rsvp.status === 'pending') || []
+
+  // Join rules
+  const isHostOrAdmin = isCreator || isAdmin
+  const inviteOnly = !!session.invite_only
+  const needsApproval = !inviteOnly && !!session.requires_approval && !isHostOrAdmin
+  const hasInvite = !inviteOnly || isHostOrAdmin ||
+    (!!currentUserId && (session.invited_users || []).map(String).includes(currentUserId))
+  const inviteUrl = session.invite_token ? `${APP_URL}/?invite=${session.invite_token}` : null
+
+  const copyInviteLink = async () => {
+    if (!inviteUrl) return
+    try {
+      await navigator.clipboard.writeText(inviteUrl)
+      setLinkCopied(true)
+      setTimeout(() => setLinkCopied(false), 2000)
+    } catch {
+      window.prompt('Copy this invite link:', inviteUrl)
+    }
+  }
+
+  const decide = async (userId: string, decision: 'yes' | 'no') => {
+    if (!onDecide) return
+    setDecidingId(userId)
+    try { await onDecide(session.id, userId, decision) } finally { setDecidingId(null) }
+  }
 
   const handleDelete = async () => {
     if (!onDelete) return
@@ -91,7 +120,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
       `⏰ ${timeStr}\n` +
       `📍 ${session.location}\n` +
       `👥 ${attendees} players confirmed\n\n` +
-      `Join here: ${APP_URL}/\n` +
+      `${inviteOnly ? '🎟 Invite only — join with this link' : 'Join here'}: ${inviteOnly && isHostOrAdmin && inviteUrl ? inviteUrl : `${APP_URL}/`}\n` +
       `📅 Add to calendar: ${calendarUrl(session.id)}`
     );
 
@@ -144,10 +173,12 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
     <div className={`relative rounded-[10px] overflow-hidden border shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 ${
       session.is_private
         ? 'bg-card-bg border-purple-500/30'
-        : 'bg-card-bg border-brand-border'
+        : inviteOnly
+          ? 'bg-card-bg border-2 border-brand-gold'
+          : 'bg-card-bg border-brand-border'
     }`}>
       {/* Court line */}
-      <div className={`absolute inset-x-0 top-0 h-[3px] ${session.is_private ? 'bg-purple-500' : 'bg-brand-primary'}`} />
+      <div className={`absolute inset-x-0 top-0 h-[3px] ${session.is_private ? 'bg-purple-500' : inviteOnly ? 'bg-brand-gold' : 'bg-brand-primary'}`} />
 
       <div className="p-5 md:p-6">
 
@@ -156,6 +187,16 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
           {session.is_private && (
             <span className="align-middle mr-2 inline-block font-sans text-[10px] tracking-wider bg-purple-600 text-white px-2 py-0.5 rounded">
               🔒 Private
+            </span>
+          )}
+          {inviteOnly && (
+            <span className="align-middle mr-2 inline-flex items-center gap-1 font-sans text-[10px] font-bold uppercase tracking-wider bg-brand-gold text-[#0D1B2A] px-2 py-0.5 rounded">
+              <Ticket className="w-3 h-3" /> Invite only
+            </span>
+          )}
+          {needsApproval && (
+            <span className="align-middle mr-2 inline-flex items-center gap-1 font-sans text-[10px] font-bold uppercase tracking-wider border border-foreground/30 text-foreground/70 px-2 py-0.5 rounded">
+              <Check className="w-3 h-3" /> Approval
             </span>
           )}
           {session.title}
@@ -179,6 +220,17 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                 title="Copy share link"
               >
                 📋
+              </button>
+            )}
+
+            {inviteOnly && isHostOrAdmin && inviteUrl && (
+              <button
+                onClick={copyInviteLink}
+                className={`flex items-center gap-1 p-2 rounded-md text-xs font-semibold transition-colors ${linkCopied ? 'text-brand-gold' : 'text-foreground/50 hover:text-brand-gold hover:bg-brand-gold/10'}`}
+                title="Copy invite link"
+              >
+                <Link2 className="w-4 h-4" />
+                {linkCopied && 'Copied'}
               </button>
             )}
 
@@ -320,10 +372,64 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
           )}
         </div>
 
+        {/* Pending requests — host and admins only */}
+        {isHostOrAdmin && pendingRSVPs.length > 0 && (
+          <div className="mb-6 rounded-md border border-brand-gold/50 bg-brand-gold/[0.06] p-3">
+            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-brand-gold mb-2.5">
+              <Clock className="w-3.5 h-3.5" /> Pending requests · {pendingRSVPs.length}
+            </p>
+            <div className="space-y-2">
+              {pendingRSVPs.map((r) => (
+                <div key={r.id} className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-2 min-w-0 text-sm font-semibold text-foreground">
+                    <UserAvatar profile={r.profiles} size="sm" />
+                    <span className="truncate">{r.profiles?.name || 'Player'}</span>
+                    {(r.guest_count || 0) > 0 && (
+                      <span className="shrink-0 text-xs font-medium text-foreground/60">+{r.guest_count} guest{(r.guest_count || 0) > 1 ? 's' : ''}</span>
+                    )}
+                  </span>
+                  <span className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      disabled={decidingId === r.user_id}
+                      onClick={() => decide(r.user_id, 'yes')}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-bold bg-brand-secondary text-white hover:brightness-110 disabled:opacity-50"
+                    >
+                      {decidingId === r.user_id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                      Approve
+                    </button>
+                    <button
+                      disabled={decidingId === r.user_id}
+                      onClick={() => decide(r.user_id, 'no')}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-bold border border-brand-primary/50 text-brand-primary hover:bg-brand-primary/10 disabled:opacity-50"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      Decline
+                    </button>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
         {currentUserId && (
           <div className="space-y-2">
             <div className="flex gap-2.5">
+              {userRSVPStatus === 'pending' ? (
+                <div className="flex-1 py-3 px-4 rounded-md font-display text-[15px] font-semibold uppercase tracking-[0.09em] flex items-center justify-center gap-2 border border-dashed border-brand-gold/60 text-brand-gold">
+                  <Clock className="w-4 h-4" /> Requested
+                </div>
+              ) : !hasInvite && userRSVPStatus !== 'yes' ? (
+                <button
+                  disabled
+                  aria-disabled="true"
+                  className="flex-1 py-3 px-4 rounded-md font-display text-[15px] font-semibold uppercase tracking-[0.09em] flex items-center justify-center gap-2 bg-foreground/10 text-foreground/40 cursor-not-allowed"
+                  title="You need the host's invite link to join"
+                >
+                  <Lock className="w-4 h-4" /> Invite only
+                </button>
+              ) : (
               <button
                 disabled={rsvpLoading}
                 onClick={() => {
@@ -355,17 +461,18 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                         </span>
                       )
                       : 'Close')
-                  : (joinMode === 'closed' ? 'Join' : 'Close')}
+                  : (joinMode === 'closed' ? (needsApproval ? 'Request to join' : 'Join') : 'Close')}
               </button>
+              )}
 
-              {userRSVPStatus === 'yes' && (
+              {(userRSVPStatus === 'yes' || userRSVPStatus === 'pending') && (
                 <button
                   disabled={rsvpLoading}
                   onClick={() => handleRSVP('no')}
                   className="px-4 py-3 rounded-md font-display text-[15px] font-semibold uppercase tracking-[0.09em] flex items-center justify-center gap-2 disabled:opacity-60 border border-brand-primary/40 text-brand-primary hover:bg-brand-primary/10 transition-all duration-200 active:scale-[0.975]"
                 >
                   {rsvpLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Cancel
+                  {userRSVPStatus === 'pending' ? 'Withdraw' : 'Cancel'}
                 </button>
               )}
 
@@ -531,7 +638,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                     className="w-full py-2.5 px-3 rounded-md font-display text-[13px] font-semibold uppercase tracking-[0.08em] bg-brand-primary text-white hover:brightness-110 disabled:opacity-60 flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
                   >
                     {rsvpLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {userRSVPStatus === 'yes' ? 'Update guests' : 'Confirm join'} {totalAdded > 0 ? `(+${totalAdded})` : ''}
+                    {userRSVPStatus === 'yes' ? 'Update guests' : needsApproval ? 'Send request' : 'Confirm join'} {totalAdded > 0 ? `(+${totalAdded})` : ''}
                   </button>
                 </div>
               )

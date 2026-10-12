@@ -47,6 +47,11 @@ export async function POST(request: Request) {
     if (!session) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 })
     }
+
+    // Invite-only sessions are shared by the host's link, not announced to everyone.
+    if (session.invite_only) {
+      return NextResponse.json({ success: true, message: 'Invite-only session: no announcement' })
+    }
     
     // Determine who to notify based on session type
     let profiles: any[] = []

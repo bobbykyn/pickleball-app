@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { X, Calendar, MapPin, Users, FileText, Clock } from 'lucide-react'
 import CourtPicker, { formatCourts } from './CourtPicker'
+import JoinRules from './JoinRules'
 
 interface CreateSessionModalProps {
   isOpen: boolean
@@ -104,6 +105,9 @@ const [showUserDropdown, setShowUserDropdown] = useState(false)
 const [hideCosts, setHideCosts] = useState(false)
   // Private session states
   const [isPrivate, setIsPrivate] = useState(false)
+  // Join rules — both off by default
+  const [requiresApproval, setRequiresApproval] = useState(false)
+  const [inviteOnly, setInviteOnly] = useState(false)
   const [invitedUsers, setInvitedUsers] = useState<string[]>([])
   const [allUsers, setAllUsers] = useState<any[]>([])
   const [showUserSelector, setShowUserSelector] = useState(false)
@@ -256,7 +260,10 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
         created_by: user.id,
         courts: courts.map(c => c.trim()).filter(Boolean),
         hide_costs: hideCosts,
-  manual_participants: manualNames
+  manual_participants: manualNames,
+        invite_only: inviteOnly,
+        requires_approval: inviteOnly ? false : requiresApproval,
+        invite_token: inviteOnly ? Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('') : null,
         //venue_type: isStackd ? 'stackd_hopewell' : 'megabox'
       }
 
@@ -311,6 +318,8 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
   setManualNames([]) 
   setUserSearchTerm('') 
   setHideCosts(false) 
+        setRequiresApproval(false)
+        setInviteOnly(false)
       }, 1000)
 
       // Send email notifications in the background (don't wait for it)
@@ -530,6 +539,13 @@ const { totalCost, isPeak, isStackd } = calculateCost(dateTime, duration, locati
     </div>
   )}
 </div>
+          <JoinRules
+            requiresApproval={requiresApproval}
+            inviteOnly={inviteOnly}
+            onRequiresApprovalChange={setRequiresApproval}
+            onInviteOnlyChange={setInviteOnly}
+          />
+
           {/* Private Session Toggle */}
           <div className="flex items-center space-x-2">
             <input

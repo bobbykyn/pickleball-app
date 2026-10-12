@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import JoinRules from './JoinRules'
 import { supabase } from '@/lib/supabase'
 import { X, Calendar, MapPin, Users, FileText, Clock } from 'lucide-react'
 import CourtPicker from './CourtPicker'
@@ -29,6 +30,8 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
   
   // Private session states
   const [isPrivate, setIsPrivate] = useState(false)
+  const [requiresApproval, setRequiresApproval] = useState(false)
+  const [inviteOnly, setInviteOnly] = useState(false)
   const [invitedUsers, setInvitedUsers] = useState<string[]>([])
   const [allUsers, setAllUsers] = useState<any[]>([])
   const [showUserSelector, setShowUserSelector] = useState(false)
@@ -81,6 +84,8 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
       
       // Set private session data
       setIsPrivate(session.is_private || false)
+      setRequiresApproval(session.requires_approval || false)
+      setInviteOnly(session.invite_only || false)
       setInvitedUsers(session.invited_users || [])
     }
   }, [session, isOpen])
@@ -162,6 +167,13 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
       // Add private session fields
       updateData.is_private = isPrivate
       updateData.invited_users = invitedUsers
+
+      // Join rules. Keep the existing invite link if there is one, so links already sent keep working.
+      updateData.invite_only = inviteOnly
+      updateData.requires_approval = inviteOnly ? false : requiresApproval
+      if (inviteOnly && !session.invite_token) {
+        updateData.invite_token = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('')
+      }
 
       const { error } = await supabase
         .from('sessions')
@@ -292,6 +304,13 @@ export default function EditSessionModal({ isOpen, onClose, onSessionUpdated, se
               required
             />
           </div>
+
+          <JoinRules
+            requiresApproval={requiresApproval}
+            inviteOnly={inviteOnly}
+            onRequiresApprovalChange={setRequiresApproval}
+            onInviteOnlyChange={setInviteOnly}
+          />
 
           {/* Private Session Toggle */}
           <div className="flex items-center space-x-2">

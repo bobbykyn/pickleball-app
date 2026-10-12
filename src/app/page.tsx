@@ -24,6 +24,7 @@ import AllStatsModal from '@/components/AllStatsModal'
 import AdminModal from '@/components/AdminModal'
 import PaymentRequestModal from '@/components/PaymentRequestModal'
 import MobileCalendarSwiper from '@/components/MobileCalendarSwiper'
+import { isAdminEmail } from '@/lib/admins'
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null)
@@ -297,6 +298,66 @@ export default function Home() {
     }
   }, [user])
 
+  // Host/admin approves or declines a pending request
+  const handleDecide = async (sessionId: string, userId: string, decision: 'yes' | 'no') => {
+    try {
+      const { data } = await supabase.auth.getSession()
+      const res = await fetch('/api/decide-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken: data.session?.access_token, sessionId, userId, decision }),
+      })
+      const json = await res.json()
+      if (!res.ok) alert(json.error || 'Could not update the request')
+    } catch (e) {
+      console.error('Decide error:', e)
+      alert('Could not update the request. Please try again.')
+    } finally {
+      loadSessions()
+    }
+  }
+
+  // Invite links (/?invite=<token>): remember the token through sign-in, then unlock the session
+  useEffect(() => {
+    try {
+      const token = new URLSearchParams(window.location.search).get('invite')
+      if (token) {
+        localStorage.setItem('pk_invite', token)
+        const url = new URL(window.location.href)
+        url.searchParams.delete('invite')
+        window.history.replaceState({}, document.title, url.pathname + url.search)
+      }
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    if (!user) return
+    let token: string | null = null
+    try { token = localStorage.getItem('pk_invite') } catch {}
+    if (!token) return
+    ;(async () => {
+      try {
+        const { data } = await supabase.auth.getSession()
+        const res = await fetch('/api/redeem-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessToken: data.session?.access_token, token }),
+        })
+        const json = await res.json()
+        try { localStorage.removeItem('pk_invite') } catch {}
+        if (!res.ok) { alert(json.error || 'This invite link is not valid'); return }
+        await loadSessions()
+        setTimeout(() => {
+          document.getElementById(`session-${json.sessionId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          setFlashSessionId(json.sessionId)
+          setTimeout(() => setFlashSessionId(null), 1600)
+        }, 300)
+      } catch (e) {
+        console.error('Invite redeem error:', e)
+      }
+    })()
+  }, [user])
+
   const handleSignOut = async () => {
     await supabase.auth.signOut()
   }
@@ -372,6 +433,15 @@ export default function Home() {
     const prevSessions = sessions
     const session = sessions.find(s => s.id === sessionId)
 
+    // Approval sessions: a new join becomes a request (the database enforces the same rule).
+    // Someone already in keeps their spot when editing guests; host and admins join directly.
+    const isHostOrAdmin = !!session && (session.created_by === user.id || isAdminEmail(user.email))
+    const approvalNeeded = status === 'yes' && !!session?.requires_approval && !session?.invite_only && !isHostOrAdmin
+    const alreadyIn = (uid: string) => !!session?.rsvps?.some(r => r.user_id === uid && r.status === 'yes')
+    const statusFor = (uid: string): 'yes' | 'maybe' | 'no' | 'pending' =>
+      approvalNeeded && !alreadyIn(uid) ? 'pending' : status
+    const myStatus = statusFor(user.id)
+
     // Max players check including guests + added friends
     if (status === 'yes' && session) {
       const existingYes = session.rsvps?.filter(r => r.status === 'yes') || []
@@ -401,7 +471,7 @@ export default function Home() {
           id: `tmp-${user.id}`,
           session_id: sessionId,
           user_id: user.id,
-          status: 'yes',
+          status: myStatus,
           created_at: new Date().toISOString(),
           guest_count: guestCount,
           guest_names: guestNames,
@@ -416,7 +486,7 @@ export default function Home() {
             id: `tmp-${u.id}`,
             session_id: sessionId,
             user_id: u.id,
-            status: 'yes',
+            status: statusFor(u.id),
             created_at: new Date().toISOString(),
             guest_count: 0,
             guest_names: [],
@@ -438,7 +508,7 @@ export default function Home() {
           {
             session_id: sessionId,
             user_id: user.id,
-            status,
+            status: myStatus,
             guest_count: status === 'yes' ? guestCount : 0,
             guest_names: status === 'yes' ? guestNames : [],
           },
@@ -450,7 +520,7 @@ export default function Home() {
         const rows = addedUsers.map(u => ({
           session_id: sessionId,
           user_id: u.id,
-          status: 'yes' as const,
+          status: statusFor(u.id),
           guest_count: 0,
           guest_names: [] as string[],
         }))
@@ -462,6 +532,16 @@ export default function Home() {
 
       // Reconcile (replaces temp IDs with real ones, picks up any cross-user changes)
       loadSessions()
+
+      // Background: a join request goes to the host only
+      if (myStatus === 'pending') {
+        fetch('/api/send-join-request-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, requesterName: userName }),
+        }).catch(e => console.error('Join-request email error:', e))
+        return
+      }
 
       // Background: notify added friends (session-creation-style)
       if (status === 'yes' && addedUsers.length > 0) {
@@ -670,6 +750,7 @@ export default function Home() {
                       rsvpLoading={rsvpLoading === session.id}
                       darkMode={darkMode}
                       onViewPlayer={(id, profile) => { setStatsView({ id, profile }); setShowStatsModal(true) }}
+                      onDecide={handleDecide}
                     />
                     </div>
                   ))}
