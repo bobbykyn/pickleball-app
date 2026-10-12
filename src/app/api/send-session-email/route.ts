@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 import { APP_URL } from '@/lib/config'
+import { calendarUrl } from '@/lib/ics'
 
 // Lazy init so env vars aren't required at build time (page-data collection).
 export const dynamic = 'force-dynamic'
@@ -173,7 +174,7 @@ if (process.env.DISABLE_EMAIL_NOTIFICATIONS === 'true') {
               minute: '2-digit'
             })}</p>
             <p>📍 ${session.location}</p>
-            <a href="${APP_URL}">Join Now</a>
+            <p><a href="${APP_URL}">Join Now</a> &nbsp;·&nbsp; <a href="${calendarUrl(session.id)}">📅 Add to Calendar</a></p>
           `
         })
         console.log('✅ Email sent successfully to:', user.email)

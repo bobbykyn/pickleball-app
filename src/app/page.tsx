@@ -13,7 +13,7 @@ import { Session, RSVP } from '@/types'
 import Sidebar from '../components/Sidebar'
 import BrandLogo from '../components/BrandLogo'
 import { Settings, DollarSign, X } from 'lucide-react'
-import { format, addMonths } from 'date-fns'
+import { format, addMonths, isSameDay } from 'date-fns'
 
 {/* import { useSwipeable } from 'react-swipeable'
 import MobileCalendarView from '@/components/MobileCalendarView' */}
@@ -49,6 +49,7 @@ export default function Home() {
   const [paymentSession, setPaymentSession] = useState<Session | null>(null)
   const [paymentDone, setPaymentDone] = useState<string[]>([])
   const [rsvpLoading, setRsvpLoading] = useState<string | null>(null)
+  const [flashSessionId, setFlashSessionId] = useState<string | null>(null)
 
 
   // Load user profile
@@ -309,7 +310,15 @@ export default function Home() {
     loadUserProfile()
   }
 
+  // Event day → jump to that session's card. Empty day → create a session.
   const handleCalendarDateClick = (date: Date) => {
+    const match = sessions.find((s) => isSameDay(new Date(s.date_time), date))
+    if (match) {
+      document.getElementById(`session-${match.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      setFlashSessionId(match.id)
+      setTimeout(() => setFlashSessionId((id) => (id === match.id ? null : id)), 1600)
+      return
+    }
     setSelectedDate(date)
     setShowCreateModal(true)
   }
@@ -646,8 +655,12 @@ export default function Home() {
               {sessions.length > 0 ? (
                 <div className="space-y-4 md:space-y-6">
                   {sessions.map((session) => (
-                    <SessionCard
+                    <div
                       key={session.id}
+                      id={`session-${session.id}`}
+                      className={`scroll-mt-28 rounded-[10px] transition-shadow duration-500 ${flashSessionId === session.id ? 'ring-2 ring-brand-gold' : ''}`}
+                    >
+                    <SessionCard
                       session={session}
                       currentUserId={user?.id}
                       currentUserEmail={user?.email}
@@ -658,6 +671,7 @@ export default function Home() {
                       darkMode={darkMode}
                       onViewPlayer={(id, profile) => { setStatsView({ id, profile }); setShowStatsModal(true) }}
                     />
+                    </div>
                   ))}
                 </div>
               ) : (

@@ -33,7 +33,8 @@ export default function MobileCalendarView({ sessions, darkMode, onDateClick, mo
       ))}
       
       {days.map((day) => {
-        const hasSession = sessionDates.some(date => isSameDay(date, day))
+        const count = sessionDates.filter(date => isSameDay(date, day)).length
+        const hasSession = count > 0
         const today = isToday(day)
         
         return (
@@ -41,14 +42,17 @@ export default function MobileCalendarView({ sessions, darkMode, onDateClick, mo
             key={day.toISOString()}
             onClick={() => onDateClick?.(day)}
             className={`
-              h-6 flex items-center justify-center rounded text-xs cursor-pointer
-              ${today && hasSession ? 'bg-brand-primary text-white font-bold' :
-                today ? `${darkMode ? 'bg-gray-600 text-white' : 'bg-gray-200'}` :
-                hasSession ? 'bg-brand-secondary/15 text-brand-secondary' :
+              relative h-6 flex items-center justify-center rounded text-xs cursor-pointer
+              ${today && hasSession ? `bg-brand-gold text-[#0D1B2A] font-bold ring-2 ring-offset-1 ${darkMode ? 'ring-white ring-offset-[#16222F]' : 'ring-[#0D1B2A] ring-offset-[#F7F1E7]'}` :
+                hasSession ? 'bg-brand-gold text-[#0D1B2A] font-bold' :
+                today ? `font-bold ring-1 ${darkMode ? 'ring-white/70 text-white' : 'ring-[#0D1B2A]/60 text-gray-900'}` :
                 darkMode ? 'text-gray-400' : 'text-gray-600'}
             `}
           >
             {format(day, 'd')}
+            {count > 1 && (
+              <span className="absolute top-[2px] right-[3px] w-1 h-1 rounded-full bg-[#0D1B2A]" />
+            )}
           </div>
         )
       })}

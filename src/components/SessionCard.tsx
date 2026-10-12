@@ -1,11 +1,12 @@
 import { Session } from '@/types'
 import { format } from 'date-fns'
-import { MapPin, Trash2, Edit, Loader2, X, Plus, Minus } from 'lucide-react'
+import { MapPin, Trash2, Edit, Loader2, X, Plus, Minus, CalendarPlus } from 'lucide-react'
 import UserAvatar from './UserAvatar'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { isAdminEmail } from '@/lib/admins'
 import { APP_URL } from '@/lib/config'
+import { calendarUrl } from '@/lib/ics'
 
 type AddedUser = { id: string; name: string; avatar_url?: string }
 
@@ -90,7 +91,8 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
       `⏰ ${timeStr}\n` +
       `📍 ${session.location}\n` +
       `👥 ${attendees} players confirmed\n\n` +
-      `Join here: ${APP_URL}/`
+      `Join here: ${APP_URL}/\n` +
+      `📅 Add to calendar: ${calendarUrl(session.id)}`
     );
 
     window.open(`https://wa.me/?text=${message}`, '_blank');
@@ -345,7 +347,14 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
               >
                 {rsvpLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                 {userRSVPStatus === 'yes'
-                  ? (joinMode === 'closed' ? '✓ Going · Edit guests' : 'Close')
+                  ? (joinMode === 'closed'
+                      ? (
+                        <span className="flex flex-col items-center leading-none">
+                          <span>✓ Going</span>
+                          <span className="mt-1 font-sans text-[10px] font-semibold normal-case tracking-[0.04em] opacity-80">Edit guests</span>
+                        </span>
+                      )
+                      : 'Close')
                   : (joinMode === 'closed' ? 'Join' : 'Close')}
               </button>
 
@@ -353,16 +362,27 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                 <button
                   disabled={rsvpLoading}
                   onClick={() => handleRSVP('no')}
-                  className="px-5 py-3 rounded-md font-display text-[15px] font-semibold uppercase tracking-[0.09em] flex items-center justify-center gap-2 disabled:opacity-60 border border-brand-primary/40 text-brand-primary hover:bg-brand-primary/10 transition-all duration-200 active:scale-[0.975]"
+                  className="px-4 py-3 rounded-md font-display text-[15px] font-semibold uppercase tracking-[0.09em] flex items-center justify-center gap-2 disabled:opacity-60 border border-brand-primary/40 text-brand-primary hover:bg-brand-primary/10 transition-all duration-200 active:scale-[0.975]"
                 >
                   {rsvpLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                   Cancel
                 </button>
               )}
 
+              <a
+                href={calendarUrl(session.id)}
+                target="_blank"
+                rel="noopener"
+                className="px-3 flex items-center rounded-md border border-brand-border text-brand-gold hover:bg-brand-gold/10 hover:border-brand-gold/40 transition-all duration-200 active:scale-95"
+                title="Add to calendar"
+                aria-label="Add to calendar"
+              >
+                <CalendarPlus className="w-[19px] h-[19px]" />
+              </a>
+
               <button
                 onClick={shareToWhatsApp}
-                className="px-4 rounded-md border border-brand-border text-brand-secondary hover:bg-brand-secondary/10 hover:border-brand-secondary/40 transition-all duration-200 active:scale-95"
+                className="px-3 rounded-md border border-brand-border text-brand-secondary hover:bg-brand-secondary/10 hover:border-brand-secondary/40 transition-all duration-200 active:scale-95"
                 title="Share to WhatsApp"
               >
                 <svg className="w-[19px] h-[19px]" fill="currentColor" viewBox="0 0 24 24">

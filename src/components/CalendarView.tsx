@@ -27,19 +27,23 @@ export default function CalendarView({ sessions, darkMode, onDateClick, mobileVi
       })
       .map(session => new Date(session.date_time))
 
+    const countOn = (day: Date) => sessionDates.filter(date => isSameDay(date, day)).length
+
+    // Event days: solid gold with navy text — the loudest thing on the grid.
+    // Today: an outline ring only, so it never competes with event days.
     const getDayClasses = (day: Date) => {
-      const baseClasses = "w-8 h-8 flex items-center justify-center text-sm rounded-lg cursor-pointer transition-colors"
-      const hasSession = sessionDates.some(date => isSameDay(date, day))
+      const baseClasses = "relative w-8 h-8 flex items-center justify-center text-sm rounded-lg cursor-pointer transition-colors"
+      const hasSession = countOn(day) > 0
       const today = isToday(day)
       
       if (today && hasSession) {
-        return `${baseClasses} bg-brand-primary text-white font-bold ring-2 ring-brand-gold`
-      }
-      if (today) {
-        return `${baseClasses} ${darkMode ? 'bg-gray-600 text-white' : 'bg-gray-200 text-gray-900'} font-bold`
+        return `${baseClasses} bg-brand-gold text-[#0D1B2A] font-bold ring-2 ring-offset-2 ${darkMode ? 'ring-white ring-offset-[#16222F]' : 'ring-[#0D1B2A] ring-offset-[#F7F1E7]'}`
       }
       if (hasSession) {
-        return `${baseClasses} bg-brand-secondary/15 text-brand-secondary font-medium hover:bg-brand-secondary/25`
+        return `${baseClasses} bg-brand-gold text-[#0D1B2A] font-bold hover:brightness-110`
+      }
+      if (today) {
+        return `${baseClasses} font-bold ring-1 ${darkMode ? 'ring-white/70 text-white hover:bg-white/10' : 'ring-[#0D1B2A]/60 text-gray-900 hover:bg-gray-100'}`
       }
       
       return `${baseClasses} ${
@@ -90,11 +94,18 @@ export default function CalendarView({ sessions, darkMode, onDateClick, mobileVi
               onClick={() => handleDayClick(day)}
               title={
                 sessionDates.some(date => isSameDay(date, day))
-                  ? `Session on ${format(day, 'MMM do')} - Click to create another`
+                  ? `Session on ${format(day, 'MMM do')} - Click to view`
                   : `Click to create session on ${format(day, 'MMM do')}`
               }
             >
               {format(day, 'd')}
+              {countOn(day) > 1 && (
+                <span className="absolute bottom-[3px] left-1/2 -translate-x-1/2 flex gap-[2px]">
+                  {Array.from({ length: Math.min(countOn(day) - 1, 3) }).map((_, i) => (
+                    <span key={i} className="w-1 h-1 rounded-full bg-[#0D1B2A]" />
+                  ))}
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -119,13 +130,13 @@ export default function CalendarView({ sessions, darkMode, onDateClick, mobileVi
       {/* Legend */}
       <div className="mt-4 space-y-2">
         <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-brand-secondary/15 rounded"></div>
+          <div className="w-4 h-4 bg-brand-gold rounded"></div>
           <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             Has sessions
           </span>
         </div>
         <div className="flex items-center space-x-2">
-          <div className={`w-4 h-4 rounded ${darkMode ? 'bg-gray-600' : 'bg-gray-200'}`}></div>
+          <div className={`w-4 h-4 rounded ring-1 ${darkMode ? 'ring-white/70' : 'ring-[#0D1B2A]/60'}`}></div>
           <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             Today
           </span>
@@ -133,7 +144,7 @@ export default function CalendarView({ sessions, darkMode, onDateClick, mobileVi
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 border-2 border-gray-400 border-dashed rounded"></div>
           <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Click to create session
+            Tap an empty day to create a session
           </span>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 import { APP_URL } from '@/lib/config'
+import { calendarUrl } from '@/lib/ics'
 
 // Lazy init so env vars aren't required at build time (page-data collection).
 export const dynamic = 'force-dynamic'
@@ -98,6 +99,10 @@ export async function POST(request: Request) {
                 <a href="${APP_URL}"
                    style="background: #0f766e; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
                   View Session
+                </a>
+                <a href="${calendarUrl(session.id)}"
+                   style="background: #ffffff; color: #0f766e; border: 2px solid #0f766e; padding: 13px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-left: 8px;">
+                  📅 Add to Calendar
                 </a>
               </div>
               <p style="font-size: 12px; color: #888;">If you can't make it, open the app and tap Cancel.</p>
