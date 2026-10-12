@@ -108,8 +108,8 @@ export default function PaymentRequestModal({ isOpen, onClose, darkMode, session
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-      <div className={`${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} rounded-lg p-6 w-full max-w-md max-h-[88vh] overflow-y-auto`}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+      <div className={`pk-sheet ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} rounded-2xl p-6 w-full max-w-md max-h-[88vh] overflow-y-auto`}>
         <div className="flex justify-between items-center mb-1">
           <h2 className="text-lg font-display font-bold tracking-wider text-brand-primary uppercase">Request Payment</h2>
           <button onClick={onClose} className={darkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}>

@@ -85,8 +85,8 @@ export default function AllStatsModal({ isOpen, onClose, darkMode, user }: AllSt
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className={`${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto`}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className={`pk-sheet ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto`}>
         <div className="flex justify-between items-center mb-1">
           <h2 className="text-xl font-display font-bold tracking-wider text-brand-primary uppercase">All Stats | 全員戰績</h2>
           <button onClick={onClose} className={darkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}>

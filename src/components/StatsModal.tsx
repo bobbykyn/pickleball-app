@@ -132,8 +132,8 @@ export default function StatsModal({ isOpen, onClose, darkMode, user, viewUserId
   const rank = getTier(stats.totalHours)
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className={`${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto`}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className={`pk-sheet ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto`}>
         <div className="flex justify-between items-center mb-1">
           <div className="flex items-center gap-3 min-w-0">
             {headerProfile && <UserAvatar profile={{ name: headerName, ...headerProfile }} size="md" />}

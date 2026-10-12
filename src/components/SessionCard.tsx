@@ -1,6 +1,7 @@
 import { Session } from '@/types'
 import { format } from 'date-fns'
-import { MapPin, Trash2, Edit, Loader2, X, Plus, Minus, CalendarPlus, Ticket, Link2, Check, Lock, Clock } from 'lucide-react'
+import { Trash2, Edit, Loader2, X, Plus, Minus, CalendarPlus, Ticket, Link2, Check, Lock, Clock, MoreHorizontal, LogOut } from 'lucide-react'
+import type { ReactNode } from 'react'
 import UserAvatar from './UserAvatar'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -29,6 +30,7 @@ interface SessionCardProps {
 
 export default function SessionCard({ session, currentUserId, currentUserEmail, onDelete, onEdit, onRSVP, rsvpLoading = false, darkMode = false, onViewPlayer, onDecide }: SessionCardProps) {
   const [linkCopied, setLinkCopied] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [decidingId, setDecidingId] = useState<string | null>(null)
   const [joinMode, setJoinMode] = useState<'closed' | 'choose' | 'plus1' | 'plusmore'>('closed')
   const [allUsers, setAllUsers] = useState<Array<{ id: string; name: string; avatar_url?: string }>>([])
@@ -169,213 +171,101 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
   const takenSeats = yesRSVPs.length + totalGuestSeats
   const spotsLeft = Math.max(0, maxPlayers - takenSeats)
 
+  const endDate = new Date(sessionDate.getTime() + durationHours * 60 * 60 * 1000)
+  const sameHalf = (sessionDate.getHours() >= 12) === (endDate.getHours() >= 12)
+  const timeRange = `${format(sessionDate, sameHalf ? 'h:mm' : 'h:mm a')} – ${format(endDate, 'h:mm a')}`
+  const hostName = session.profiles?.name || 'Unknown'
+  const guestSeatsYes = takenSeats - yesRSVPs.length
+
+  // Rubber stamp on the page: your status first, then the session's
+  const stamp: { text: string; cls: string } | null =
+    userRSVPStatus === 'yes' ? { text: "YOU'RE IN", cls: 'text-go-ink animate-stamp-in' }
+    : userRSVPStatus === 'pending' ? { text: 'REQUESTED', cls: 'text-gold-ink' }
+    : spotsLeft === 0 ? { text: 'FULL', cls: 'text-brand-primary' }
+    : !hasInvite ? { text: 'INVITE ONLY', cls: 'text-gold-ink' }
+    : { text: `${spotsLeft} SPOT${spotsLeft === 1 ? '' : 'S'}`, cls: 'text-gold-ink' }
+
+  const copyPrivateLink = () => {
+    const shareUrl = `${window.location.origin}/session/${session.id}?private=${session.private_key}`
+    navigator.clipboard.writeText(shareUrl).catch(() => window.prompt('Copy this link:', shareUrl))
+  }
+
+  const menuItems: Array<{ label: string; icon: ReactNode; onClick: () => void; danger?: boolean }> = []
+  if (userRSVPStatus === 'yes') menuItems.push({ label: 'Cancel my spot', icon: <LogOut className="w-4 h-4" />, onClick: () => handleRSVP('no'), danger: true })
+  if (userRSVPStatus === 'pending') menuItems.push({ label: 'Withdraw request', icon: <LogOut className="w-4 h-4" />, onClick: () => handleRSVP('no'), danger: true })
+  if (inviteOnly && isHostOrAdmin && inviteUrl) menuItems.push({ label: linkCopied ? 'Invite link copied' : 'Copy invite link', icon: <Link2 className="w-4 h-4" />, onClick: copyInviteLink })
+  if (session.is_private && isCreator) menuItems.push({ label: 'Copy private link', icon: <Link2 className="w-4 h-4" />, onClick: copyPrivateLink })
+  if (canEdit && onEdit) menuItems.push({ label: 'Edit session', icon: <Edit className="w-4 h-4" />, onClick: () => onEdit(session) })
+  if (canDelete && onDelete) menuItems.push({ label: 'Delete session', icon: <Trash2 className="w-4 h-4" />, onClick: handleDelete, danger: true })
+
+  const stripCls = session.is_private
+    ? 'bg-purple-700 text-white border-purple-950'
+    : inviteOnly
+      ? 'bg-brand-gold text-navy border-[#9A6B00]'
+      : 'bg-brand-primary text-white border-brand-burgundy'
+
   return (
-    <div className={`relative rounded-[10px] overflow-hidden border shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 ${
-      session.is_private
-        ? 'bg-card-bg border-purple-500/30'
-        : inviteOnly
-          ? 'bg-card-bg border-2 border-brand-gold'
-          : 'bg-card-bg border-brand-border'
+    <article className={`relative rounded-t-md rounded-b-2xl overflow-hidden bg-card-bg shadow-[0_12px_28px_rgba(0,0,0,0.28)] transition-transform duration-300 ${
+      inviteOnly && !session.is_private ? 'border-2 border-brand-gold' : 'border border-brand-border'
     }`}>
-      {/* Court line */}
-      <div className={`absolute inset-x-0 top-0 h-[3px] ${session.is_private ? 'bg-purple-500' : inviteOnly ? 'bg-brand-gold' : 'bg-brand-primary'}`} />
+      {/* Calendar-page strip */}
+      <div className={`h-[34px] flex items-center justify-between gap-3 px-4 border-b-[3px] font-mono text-[11px] font-semibold tracking-[0.06em] ${stripCls}`}>
+        <span className="flex items-center gap-1.5 min-w-0">
+          {session.is_private && <Lock className="w-3 h-3 shrink-0" />}
+          {inviteOnly && <Ticket className="w-3 h-3 shrink-0" />}
+          <span className="truncate">{session.title}</span>
+        </span>
+        <span className="shrink-0 uppercase opacity-90">Host: {hostName}</span>
+      </div>
+      <div className="pk-holes" aria-hidden="true" />
 
-      <div className="p-5 md:p-6">
+      {stamp && (
+        <div key={stamp.text} className={`pk-stamp absolute right-3.5 top-[58px] pointer-events-none ${stamp.cls}`}>
+          {stamp.text}
+        </div>
+      )}
 
-        {/* Title — full width, nothing crowding it */}
-        <h3 className="font-display text-xl md:text-2xl font-semibold leading-[1.12] tracking-[0.01em] text-foreground">
-          {session.is_private && (
-            <span className="align-middle mr-2 inline-block font-sans text-[10px] tracking-wider bg-purple-600 text-white px-2 py-0.5 rounded">
-              🔒 Private
-            </span>
-          )}
-          {inviteOnly && (
-            <span className="align-middle mr-2 inline-flex items-center gap-1 font-sans text-[10px] font-bold uppercase tracking-wider bg-brand-gold text-[#0D1B2A] px-2 py-0.5 rounded">
-              <Ticket className="w-3 h-3" /> Invite only
-            </span>
-          )}
+      {/* Big date */}
+      <div className="px-[18px] pt-1.5">
+        <div className="font-display text-[52px] font-bold leading-none uppercase text-foreground">
+          {format(sessionDate, 'd MMM')}
+        </div>
+        <div className="mt-1.5 flex items-center gap-2.5 flex-wrap">
+          <span className="font-display text-xl font-medium tracking-[0.03em] text-gold-ink uppercase">
+            {format(sessionDate, 'EEE')} · {timeRange}
+          </span>
+          <span className="text-[11px] font-bold text-foreground/75 border border-brand-border rounded-md px-1.5 py-0.5">
+            {durationHours} {durationHours === 1 ? 'hr' : 'hrs'}
+          </span>
           {needsApproval && (
-            <span className="align-middle mr-2 inline-flex items-center gap-1 font-sans text-[10px] font-bold uppercase tracking-wider border border-foreground/30 text-foreground/70 px-2 py-0.5 rounded">
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground/75 border border-foreground/30 rounded-md px-1.5 py-0.5">
               <Check className="w-3 h-3" /> Approval
             </span>
           )}
-          {session.title}
-        </h3>
-
-        {/* Meta row — host on the left, controls pushed down here */}
-        <div className="mt-2.5 flex items-center justify-between gap-3">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-foreground/55 truncate">
-            Hosted by {session.profiles?.name || 'Unknown'}
-          </span>
-
-          <div className="flex items-center gap-0.5 shrink-0">
-            {session.is_private && isCreator && (
-              <button
-                onClick={() => {
-                  const shareUrl = `${window.location.origin}/session/${session.id}?private=${session.private_key}`
-                  navigator.clipboard.writeText(shareUrl)
-                  alert('Share link copied to clipboard!')
-                }}
-                className="p-2 rounded-md text-foreground/50 hover:text-brand-secondary hover:bg-brand-secondary/10 transition-colors"
-                title="Copy share link"
-              >
-                📋
-              </button>
-            )}
-
-            {inviteOnly && isHostOrAdmin && inviteUrl && (
-              <button
-                onClick={copyInviteLink}
-                className={`flex items-center gap-1 p-2 rounded-md text-xs font-semibold transition-colors ${linkCopied ? 'text-brand-gold' : 'text-foreground/50 hover:text-brand-gold hover:bg-brand-gold/10'}`}
-                title="Copy invite link"
-              >
-                <Link2 className="w-4 h-4" />
-                {linkCopied && 'Copied'}
-              </button>
-            )}
-
-            {canEdit && onEdit && (
-              <button
-                onClick={() => onEdit(session)}
-                className="p-2 rounded-md text-foreground/50 hover:text-brand-secondary hover:bg-brand-secondary/10 transition-colors"
-                title={isAdmin ? 'Edit session (Admin)' : 'Edit session'}
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-            )}
-
-            {canDelete && (
-              <button
-                onClick={handleDelete}
-                className="p-2 rounded-md text-foreground/50 hover:text-brand-primary hover:bg-brand-primary/10 transition-colors"
-                title={isAdmin ? 'Delete session (Admin)' : 'Delete session'}
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            )}
-          </div>
         </div>
-
-        {/* Date plate — the focal point */}
-        <div className="mt-5 mb-4 border-l-[3px] border-brand-gold rounded-r-md bg-gradient-to-r from-brand-gold/10 via-brand-gold/[0.03] to-transparent py-3 px-4">
-          <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/50 mb-0.5">
-            {format(sessionDate, 'EEEE')}
-          </div>
-          <div className="font-display text-[1.6rem] md:text-[1.75rem] font-medium leading-none text-foreground flex items-baseline gap-2.5 flex-wrap">
-            {format(sessionDate, 'MMMM d')}
-            <span className="text-[1.05rem] font-normal tracking-wide text-brand-gold">
-              {format(sessionDate, 'h:mm a')}
-            </span>
-            <span className="self-center font-sans text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/50 border border-brand-border rounded-[3px] px-1.5 py-0.5">
-              {durationHours} {durationHours === 1 ? 'hr' : 'hrs'}
-            </span>
-          </div>
-        </div>
-
-        {/* Location */}
-        <div className="flex items-center gap-2.5 text-sm font-semibold text-foreground mb-6">
-          <MapPin className="w-[17px] h-[17px] text-brand-secondary shrink-0" />
-          <span>{session.location}</span>
+        <div className="mt-2 flex items-center gap-2 flex-wrap">
+          <span className="text-[17px] font-semibold text-foreground">{session.location}</span>
           {courtList.length > 0 && (
-            <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/60 border border-brand-border rounded-[3px] px-1.5 py-0.5 shrink-0">
+            <span className="text-[11px] font-extrabold bg-foreground text-background rounded-md px-1.5 py-0.5">
               Court {courtList.join('+')}
             </span>
           )}
         </div>
 
-        {/* Notes */}
         {session.notes && (
-          <div className="mb-6 p-3 rounded-md bg-foreground/[0.04] border border-brand-border">
-            <p className="text-sm text-foreground/75">{session.notes}</p>
+          <div className="mt-4 p-3 rounded-md bg-surface-2 border border-brand-border">
+            <p className="text-sm text-foreground/80 whitespace-pre-line">{session.notes}</p>
           </div>
         )}
+      </div>
 
-        {/* Roster */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2.5">
-            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55 shrink-0">
-              On the court
-            </span>
-            <span className="flex-1 h-px bg-brand-border" />
-            <span className="shrink-0 flex items-baseline gap-2">
-              <span className="font-display text-sm font-semibold text-foreground">
-                {takenSeats}<span className="text-foreground/50">/{maxPlayers}</span>
-              </span>
-              <span className={`text-[10px] font-bold uppercase tracking-[0.1em] ${spotsLeft === 0 ? 'text-brand-primary' : 'text-foreground/50'}`}>
-                {spotsLeft === 0 ? 'Full' : `${spotsLeft} left`}
-              </span>
-            </span>
-          </div>
+      <div className="mx-[18px] mt-4 border-t-[1.5px] border-dashed border-brand-border" />
 
-          {/* Capacity bar */}
-          <div className="flex gap-[3px] mb-3.5">
-            {Array.from({ length: maxPlayers }).map((_, i) => (
-              <span
-                key={i}
-                className={`h-1 flex-1 rounded-[1px] ${
-                  i < yesRSVPs.length
-                    ? 'bg-brand-secondary'
-                    : i < takenSeats
-                      ? 'bg-brand-gold'
-                      : 'bg-brand-border'
-                }`}
-              />
-            ))}
-          </div>
-
-          {yesRSVPs.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5">
-              {yesRSVPs.map((rsvp) => (
-                <div key={rsvp.id} className="flex flex-wrap gap-1.5 items-center">
-                  <button
-                    type="button"
-                    onClick={() => onViewPlayer?.(rsvp.user_id, rsvp.profiles)}
-                    disabled={!onViewPlayer}
-                    title={onViewPlayer ? `View ${rsvp.profiles?.name || 'player'}'s stats` : undefined}
-                    className={`flex items-center gap-1.5 pl-1 pr-3 py-1 rounded-full text-[13px] font-semibold bg-brand-secondary/15 text-brand-secondary transition-transform duration-200 ${
-                      onViewPlayer ? 'hover:-translate-y-0.5 cursor-pointer' : 'cursor-default'
-                    }`}
-                  >
-                    <UserAvatar profile={rsvp.profiles} size="sm" />
-                    {rsvp.profiles?.name || 'Player'}
-                  </button>
-
-                  {rsvp.guest_names?.map((gname, gi) => (
-                    <span
-                      key={`g-${rsvp.id}-${gi}`}
-                      className="px-3 py-1 rounded-full text-[13px] font-semibold text-foreground/60 border border-dashed border-brand-border"
-                    >
-                      {gname} · guest
-                    </span>
-                  ))}
-
-                  {(rsvp.guest_count || 0) > (rsvp.guest_names?.length || 0) && (
-                    <span className="px-3 py-1 rounded-full text-[13px] font-semibold text-foreground/60 border border-dashed border-brand-border">
-                      +{(rsvp.guest_count || 0) - (rsvp.guest_names?.length || 0)} guest of {rsvp.profiles?.name || 'player'}
-                    </span>
-                  )}
-                </div>
-              ))}
-
-              {/* Session-level manual participants (legacy, from create flow) */}
-              {session.manual_participants?.map((name: string, index: number) => (
-                <span
-                  key={`manual-${index}`}
-                  className="px-3 py-1 rounded-full text-[13px] font-semibold text-foreground/60 border border-dashed border-brand-border"
-                >
-                  {name} · guest
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-foreground/50">No one has joined yet — be the first.</p>
-          )}
-        </div>
-
+      <div className="px-4 pt-3.5 pb-4 space-y-3">
         {/* Pending requests — host and admins only */}
         {isHostOrAdmin && pendingRSVPs.length > 0 && (
-          <div className="mb-6 rounded-md border border-brand-gold/50 bg-brand-gold/[0.06] p-3">
-            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-brand-gold mb-2.5">
+          <div className="rounded-md border border-brand-gold/50 bg-brand-gold/[0.07] p-3">
+            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-gold-ink mb-2.5">
               <Clock className="w-3.5 h-3.5" /> Pending requests · {pendingRSVPs.length}
             </p>
             <div className="space-y-2">
@@ -392,7 +282,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                     <button
                       disabled={decidingId === r.user_id}
                       onClick={() => decide(r.user_id, 'yes')}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-bold bg-brand-secondary text-white hover:brightness-110 disabled:opacity-50"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-bold bg-brand-go text-navy hover:brightness-105 disabled:opacity-50"
                     >
                       {decidingId === r.user_id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                       Approve
@@ -400,7 +290,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                     <button
                       disabled={decidingId === r.user_id}
                       onClick={() => decide(r.user_id, 'no')}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-bold border border-brand-primary/50 text-brand-primary hover:bg-brand-primary/10 disabled:opacity-50"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-bold border border-brand-primary/60 text-brand-primary hover:bg-brand-primary/10 disabled:opacity-50"
                     >
                       <X className="w-3.5 h-3.5" />
                       Decline
@@ -412,67 +302,109 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
           </div>
         )}
 
-        {/* Action Buttons */}
+        {/* Roster */}
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-foreground/60">On the court</span>
+          <span className="text-[13px] font-bold">
+            <span className="font-display text-base">{takenSeats}/{maxPlayers}</span>{' '}
+            <span className={spotsLeft === 0 ? 'text-brand-primary' : 'text-foreground/60'}>
+              · {spotsLeft === 0 ? 'full' : `${spotsLeft} spot${spotsLeft === 1 ? '' : 's'} left`}
+            </span>
+          </span>
+        </div>
+        <div className="flex gap-1" aria-hidden="true">
+          {Array.from({ length: maxPlayers }).map((_, i) => (
+            <span
+              key={i}
+              className={`h-[5px] flex-1 rounded-full ${
+                i < yesRSVPs.length ? 'bg-brand-go' : i < takenSeats ? 'bg-brand-go/50' : 'bg-foreground/[0.12]'
+              }`}
+            />
+          ))}
+        </div>
+
+        {yesRSVPs.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {yesRSVPs.map((rsvp) => (
+              <div key={rsvp.id} className="flex flex-wrap gap-1.5 items-center">
+                <button
+                  type="button"
+                  onClick={() => onViewPlayer?.(rsvp.user_id, rsvp.profiles)}
+                  disabled={!onViewPlayer}
+                  title={onViewPlayer ? `View ${rsvp.profiles?.name || 'player'}'s stats` : undefined}
+                  className={`flex items-center gap-1.5 pl-[3px] pr-2.5 py-[3px] rounded-full text-[13px] font-semibold bg-chip text-chip-ink transition-transform duration-200 ${
+                    onViewPlayer ? 'hover:-translate-y-0.5 cursor-pointer' : 'cursor-default'
+                  }`}
+                >
+                  <UserAvatar profile={rsvp.profiles} size="sm" />
+                  {rsvp.profiles?.name || 'Player'}
+                </button>
+
+                {rsvp.guest_names?.map((gname, gi) => (
+                  <span key={`g-${rsvp.id}-${gi}`} className="px-3 py-1 rounded-full text-[13px] font-semibold text-foreground/65 border border-dashed border-brand-border">
+                    {gname} · guest
+                  </span>
+                ))}
+
+                {(rsvp.guest_count || 0) > (rsvp.guest_names?.length || 0) && (
+                  <span className="px-3 py-1 rounded-full text-[13px] font-semibold text-foreground/65 border border-dashed border-brand-border">
+                    +{(rsvp.guest_count || 0) - (rsvp.guest_names?.length || 0)} guest of {rsvp.profiles?.name || 'player'}
+                  </span>
+                )}
+              </div>
+            ))}
+
+            {/* Session-level manual participants (legacy, from create flow) */}
+            {session.manual_participants?.map((name: string, index: number) => (
+              <span key={`manual-${index}`} className="px-3 py-1 rounded-full text-[13px] font-semibold text-foreground/65 border border-dashed border-brand-border">
+                {name} · guest
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-foreground/55">No one has joined yet — be the first.</p>
+        )}
+
+        {/* Actions */}
         {currentUserId && (
-          <div className="space-y-2">
-            <div className="flex gap-2.5">
+          <div className="space-y-2 pt-1">
+            <div className="flex gap-2">
               {userRSVPStatus === 'pending' ? (
-                <div className="flex-1 py-3 px-4 rounded-md font-display text-[15px] font-semibold uppercase tracking-[0.09em] flex items-center justify-center gap-2 border border-dashed border-brand-gold/60 text-brand-gold">
+                <div className="flex-1 h-12 rounded-xl font-display text-[15px] font-semibold uppercase tracking-[0.1em] flex items-center justify-center gap-2 border border-dashed border-brand-gold/70 text-gold-ink">
                   <Clock className="w-4 h-4" /> Requested
                 </div>
               ) : !hasInvite && userRSVPStatus !== 'yes' ? (
                 <button
                   disabled
                   aria-disabled="true"
-                  className="flex-1 py-3 px-4 rounded-md font-display text-[15px] font-semibold uppercase tracking-[0.09em] flex items-center justify-center gap-2 bg-foreground/10 text-foreground/40 cursor-not-allowed"
                   title="You need the host's invite link to join"
+                  className="flex-1 h-12 rounded-xl font-display text-[15px] font-semibold uppercase tracking-[0.1em] flex items-center justify-center gap-2 bg-foreground/10 text-foreground/40 cursor-not-allowed"
                 >
                   <Lock className="w-4 h-4" /> Invite only
                 </button>
               ) : (
-              <button
-                disabled={rsvpLoading}
-                onClick={() => {
-                  if (userRSVPStatus === 'yes') {
-                    if (joinMode === 'closed') {
-                      openEditGuests()
-                    } else {
-                      resetPicker()
-                    }
-                  } else {
-                    setJoinMode(prev => (prev === 'closed' ? 'choose' : 'closed'))
-                  }
-                }}
-                className={`flex-1 py-3 px-4 rounded-md font-display text-[15px] font-semibold uppercase tracking-[0.09em] flex items-center justify-center gap-2 disabled:opacity-60 transition-all duration-200 active:scale-[0.975] ${
-                  userRSVPStatus === 'yes'
-                    ? (joinMode === 'closed'
-                        ? 'bg-brand-secondary text-white hover:brightness-110'
-                        : 'bg-foreground/15 text-foreground hover:bg-foreground/25')
-                    : 'bg-brand-primary text-white hover:brightness-110'
-                }`}
-              >
-                {rsvpLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                {userRSVPStatus === 'yes'
-                  ? (joinMode === 'closed'
-                      ? (
-                        <span className="flex flex-col items-center leading-none">
-                          <span>✓ Going</span>
-                          <span className="mt-1 font-sans text-[10px] font-semibold normal-case tracking-[0.04em] opacity-80">Edit guests</span>
-                        </span>
-                      )
-                      : 'Close')
-                  : (joinMode === 'closed' ? (needsApproval ? 'Request to join' : 'Join') : 'Close')}
-              </button>
-              )}
-
-              {(userRSVPStatus === 'yes' || userRSVPStatus === 'pending') && (
                 <button
                   disabled={rsvpLoading}
-                  onClick={() => handleRSVP('no')}
-                  className="px-4 py-3 rounded-md font-display text-[15px] font-semibold uppercase tracking-[0.09em] flex items-center justify-center gap-2 disabled:opacity-60 border border-brand-primary/40 text-brand-primary hover:bg-brand-primary/10 transition-all duration-200 active:scale-[0.975]"
+                  onClick={() => {
+                    if (userRSVPStatus === 'yes') {
+                      if (joinMode === 'closed') openEditGuests()
+                      else resetPicker()
+                    } else {
+                      setJoinMode(prev => (prev === 'closed' ? 'choose' : 'closed'))
+                    }
+                  }}
+                  className={`flex-1 h-12 rounded-xl font-display text-[15px] font-semibold uppercase tracking-[0.1em] flex items-center justify-center gap-2 disabled:opacity-60 transition-all duration-200 active:scale-[0.975] ${
+                    userRSVPStatus === 'yes'
+                      ? (joinMode === 'closed' ? 'bg-brand-go text-navy hover:brightness-105' : 'bg-foreground/15 text-foreground hover:bg-foreground/25')
+                      : (joinMode === 'closed' ? 'bg-brand-primary text-white hover:brightness-110' : 'bg-foreground/15 text-foreground hover:bg-foreground/25')
+                  }`}
                 >
-                  {rsvpLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {userRSVPStatus === 'pending' ? 'Withdraw' : 'Cancel'}
+                  {rsvpLoading
+                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    : userRSVPStatus === 'yes' && joinMode === 'closed' && <Check className="w-4 h-4" strokeWidth={3} />}
+                  {userRSVPStatus === 'yes'
+                    ? (joinMode === 'closed' ? 'Going · Guests' : 'Close')
+                    : (joinMode === 'closed' ? (needsApproval ? 'Request to join' : 'Join') : 'Close')}
                 </button>
               )}
 
@@ -480,44 +412,76 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                 href={calendarUrl(session.id)}
                 target="_blank"
                 rel="noopener"
-                className="px-3 flex items-center rounded-md border border-brand-border text-brand-gold hover:bg-brand-gold/10 hover:border-brand-gold/40 transition-all duration-200 active:scale-95"
+                className="w-12 h-12 shrink-0 flex items-center justify-center rounded-xl border border-brand-gold/50 text-gold-ink hover:bg-brand-gold/10 transition-colors active:scale-95"
                 title="Add to calendar"
                 aria-label="Add to calendar"
               >
-                <CalendarPlus className="w-[19px] h-[19px]" />
+                <CalendarPlus className="w-5 h-5" />
               </a>
 
               <button
                 onClick={shareToWhatsApp}
-                className="px-3 rounded-md border border-brand-border text-brand-secondary hover:bg-brand-secondary/10 hover:border-brand-secondary/40 transition-all duration-200 active:scale-95"
+                className="w-12 h-12 shrink-0 flex items-center justify-center rounded-xl border border-foreground/30 text-foreground hover:bg-surface-2 transition-colors active:scale-95"
                 title="Share to WhatsApp"
+                aria-label="Share to WhatsApp"
               >
-                <svg className="w-[19px] h-[19px]" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="w-[19px] h-[19px]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
                 </svg>
               </button>
+
+              {menuItems.length > 0 && (
+                <div className="relative shrink-0">
+                  <button
+                    onClick={() => setMenuOpen(o => !o)}
+                    className="w-12 h-12 flex items-center justify-center rounded-xl border border-foreground/20 text-foreground/80 hover:bg-surface-2 transition-colors active:scale-95"
+                    aria-label="More options"
+                    aria-expanded={menuOpen}
+                  >
+                    <MoreHorizontal className="w-5 h-5" />
+                  </button>
+                  {menuOpen && (
+                    <>
+                      <div className="fixed inset-0 z-30" onClick={() => setMenuOpen(false)} />
+                      <div className="absolute right-0 bottom-14 z-40 w-56 rounded-xl border border-brand-border bg-card-bg shadow-2xl py-1.5" role="menu">
+                        {menuItems.map((item) => (
+                          <button
+                            key={item.label}
+                            role="menuitem"
+                            onClick={() => { item.onClick(); if (!item.label.startsWith('Copy')) setMenuOpen(false) }}
+                            className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm font-semibold text-left hover:bg-surface-2 transition-colors ${item.danger ? 'text-brand-primary' : 'text-foreground'}`}
+                          >
+                            {item.icon}
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Initial choose panel */}
             {joinMode === 'choose' && userRSVPStatus !== 'yes' && (
-              <div className="p-3 rounded-md border border-brand-border bg-foreground/[0.03]">
+              <div className="p-3 rounded-md border border-brand-border bg-surface-2">
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/55 mb-2.5">Who's coming?</p>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => { handleRSVP('yes'); setJoinMode('closed') }}
-                    className="py-2.5 px-2 rounded-md font-display text-[13px] font-medium uppercase tracking-[0.07em] bg-brand-secondary text-white hover:brightness-110 transition-all active:scale-[0.97]"
+                    className="py-2.5 px-2 rounded-md font-display text-[13px] font-medium uppercase tracking-[0.07em] bg-brand-primary text-white hover:brightness-110 transition-all active:scale-[0.97]"
                   >
                     Just me
                   </button>
                   <button
                     onClick={() => setJoinMode('plus1')}
-                    className="py-2.5 px-2 rounded-md font-display text-[13px] font-medium uppercase tracking-[0.07em] border border-brand-border text-foreground hover:border-brand-secondary hover:bg-brand-secondary/10 transition-all active:scale-[0.97]"
+                    className="py-2.5 px-2 rounded-md font-display text-[13px] font-medium uppercase tracking-[0.07em] border border-brand-border text-foreground hover:border-foreground/40 hover:bg-surface-2 transition-all active:scale-[0.97]"
                   >
                     +1
                   </button>
                   <button
                     onClick={() => setJoinMode('plusmore')}
-                    className="py-2.5 px-2 rounded-md font-display text-[13px] font-medium uppercase tracking-[0.07em] border border-brand-border text-foreground hover:border-brand-secondary hover:bg-brand-secondary/10 transition-all active:scale-[0.97]"
+                    className="py-2.5 px-2 rounded-md font-display text-[13px] font-medium uppercase tracking-[0.07em] border border-brand-border text-foreground hover:border-foreground/40 hover:bg-surface-2 transition-all active:scale-[0.97]"
                   >
                     +more
                   </button>
@@ -531,7 +495,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
               const totalAdded = picked.length + guestNames.length + unnamedGuestCount
               const atCap = totalAdded >= cap
               return (
-                <div className="p-3 rounded-md border border-brand-border bg-foreground/[0.03] space-y-3">
+                <div className="p-3 rounded-md border border-brand-border bg-surface-2 space-y-3">
                   <div className="flex justify-between items-center">
                     <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/55">
                       {joinMode === 'plus1' ? 'Bring one friend' : 'Bring friends'}
@@ -550,7 +514,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                       onFocus={() => setShowPickerDropdown(pickerSearch.length > 0)}
                       placeholder="Search friend or type guest name..."
                       disabled={atCap}
-                      className="w-full p-2 rounded-md border border-brand-border bg-background text-foreground placeholder-foreground/40 text-sm disabled:opacity-50 focus:border-brand-secondary focus:outline-none transition-colors"
+                      className="w-full p-2 rounded-md border border-brand-border bg-background text-foreground placeholder-foreground/40 text-sm disabled:opacity-50 focus:border-brand-gold focus:outline-none transition-colors"
                     />
                     {showPickerDropdown && !atCap && (
                       <div className="absolute z-10 w-full mt-1 rounded-md shadow-lg max-h-48 overflow-y-auto border border-brand-border bg-background">
@@ -564,7 +528,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                                 setPickerSearch('')
                                 setShowPickerDropdown(false)
                               }}
-                              className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-brand-secondary/10 transition-colors"
+                              className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-surface-2 transition-colors"
                             >
                               {u.name}
                             </button>
@@ -578,7 +542,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                                 setPickerSearch('')
                                 setShowPickerDropdown(false)
                               }}
-                              className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-brand-secondary/10 transition-colors"
+                              className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-surface-2 transition-colors"
                             >
                               Add "{pickerSearch.trim()}" as guest
                             </button>
@@ -592,7 +556,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                   {(picked.length > 0 || guestNames.length > 0) && (
                     <div className="flex flex-wrap gap-2">
                       {picked.map(u => (
-                        <span key={u.id} className="inline-flex items-center gap-1 px-2 py-1 bg-brand-secondary/15 text-brand-secondary rounded-full text-xs whitespace-nowrap">
+                        <span key={u.id} className="inline-flex items-center gap-1 px-2 py-1 bg-chip text-chip-ink rounded-full text-xs whitespace-nowrap">
                           {u.name}
                           <button onClick={() => setPicked(prev => prev.filter(p => p.id !== u.id))}><X className="w-3 h-3" /></button>
                         </span>
@@ -613,14 +577,14 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => setUnnamedGuestCount(c => Math.max(0, c - 1))}
-                          className="p-1.5 rounded-md border border-brand-border text-foreground hover:border-brand-secondary hover:bg-brand-secondary/10 transition-all active:scale-95"
+                          className="p-1.5 rounded-md border border-brand-border text-foreground hover:border-foreground/40 hover:bg-surface-2 transition-all active:scale-95"
                         >
                           <Minus className="w-3 h-3" />
                         </button>
                         <span className="w-6 text-center text-sm font-semibold text-foreground">{unnamedGuestCount}</span>
                         <button
                           onClick={() => setUnnamedGuestCount(c => c + 1)}
-                          className="p-1.5 rounded-md border border-brand-border text-foreground hover:border-brand-secondary hover:bg-brand-secondary/10 transition-all active:scale-95"
+                          className="p-1.5 rounded-md border border-brand-border text-foreground hover:border-foreground/40 hover:bg-surface-2 transition-all active:scale-95"
                         >
                           <Plus className="w-3 h-3" />
                         </button>
@@ -629,7 +593,7 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
                   )}
 
                   {joinMode === 'plus1' && atCap && (
-                    <p className="text-[11px] text-brand-gold">+1 cap reached. Use +more to add another.</p>
+                    <p className="text-[11px] text-gold-ink">+1 cap reached. Use +more to add another.</p>
                   )}
 
                   <button
@@ -646,6 +610,6 @@ export default function SessionCard({ session, currentUserId, currentUserEmail, 
           </div>
         )}
       </div>
-    </div>
+    </article>
   )
 }

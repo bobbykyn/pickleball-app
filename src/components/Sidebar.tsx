@@ -51,7 +51,7 @@ export default function Sidebar({
       )}
 
       <div 
-        className={`fixed top-0 right-0 h-full w-80 shadow-2xl transform transition-transform duration-300 ease-in-out z-50 border-l ${
+        className={`pk-sheet fixed top-0 right-0 h-full w-80 max-w-[88vw] shadow-2xl transform transition-transform duration-300 ease-in-out z-50 border-l ${
           darkMode 
             ? 'bg-gray-800 border-gray-700 text-white' 
             : 'bg-white border-gray-200 text-gray-900'
@@ -103,7 +103,7 @@ export default function Sidebar({
                   aria-label="Toggle dark mode"
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    className={`inline-block h-4 w-4 transform rounded-full bg-[#fff] transition-transform ${
                       darkMode ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />

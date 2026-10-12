@@ -71,10 +71,10 @@ export default function SessionPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading session...</p>
+          <p className="mt-4 text-foreground/60">Loading session...</p>
         </div>
       </div>
     )
@@ -82,13 +82,13 @@ export default function SessionPage() {
 
   if (error || !session) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Session Not Found</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">{error || 'The session you are looking for does not exist.'}</p>
+          <h1 className="text-2xl font-bold text-foreground mb-4">Session Not Found</h1>
+          <p className="text-foreground/60 mb-6">{error || 'The session you are looking for does not exist.'}</p>
           <a 
             href="/" 
-            className="bg-brand-primary text-white px-6 py-3 rounded-lg hover:bg-brand-primary/90 transition-colors"
+            className="bg-brand-primary text-white px-6 py-3 rounded-xl hover:brightness-110 transition-colors"
           >
             Back to Home
           </a>
@@ -98,13 +98,13 @@ export default function SessionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <div className="mb-6">
             <a 
               href="/" 
-              className="inline-flex items-center text-brand-primary hover:text-brand-primary/80"
+              className="inline-flex items-center text-gold-ink hover:underline"
             >
               ← Back to all sessions
             </a>

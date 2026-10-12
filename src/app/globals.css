@@ -1,46 +1,80 @@
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap');
 @import "tailwindcss";
 
+/*
+ * Pickle Kitchen app — design "C" (Oct 2026).
+ * Palette from BRAND-LOCK + Visual Playbook v6: site navy, Action Red (the k in the pk mark),
+ * Deep Burgundy, Neon Lime (the ball), Electric Blue — plus gold kept for dates & times.
+ */
 :root {
-  --background: #F9F6F0; /* Soft warm cream background */
-  --foreground: #0D1B2A; /* Deep Navy text */
-  --card-bg: #F7F1E7; /* Soft alabaster — low contrast against the cream bg */
+  --background: #F9F6F0;          /* cream */
+  --foreground: #0D1B2A;          /* site navy */
+  --card-bg: #FFFFFF;
+  --surface-2: rgba(13, 27, 42, 0.05);
+  --input-bg: #FFFFFF;
 
-  --primary: #C0392B; /* Crimson Red */
-  --secondary: #2A6A5A; /* Forest Green */
-  --accent-gold: #F2A900; /* Warm Gold */
-  
+  --primary: #BB221C;             /* Action Red */
+  --burgundy: #741513;            /* Deep Burgundy */
+  --secondary: #1754D1;           /* Electric Blue */
+  --accent-gold: #F2A900;         /* gold fill */
+  --gold-ink: #946600;            /* gold as text on light */
+  --go: #D7FF3B;                  /* Neon Lime fill (navy text on it) */
+  --go-ink: #3F6B00;              /* "you're in" as text on light */
+  --chip: rgba(23, 84, 209, 0.10);
+  --chip-ink: #1754D1;
+
   --border-color: rgba(13, 27, 42, 0.12);
 }
 
 .dark {
-  --background: #0D1B2A; /* Obsidian Navy background */
-  --foreground: #FFFDF9; /* Off-white cream text */
-  --card-bg: #16222F; /* Lighter navy card background */
-  
-  --primary: #C0392B; /* Crimson Red */
-  --secondary: #2A6A5A; /* Forest Green */
-  
-  --border-color: rgba(255, 253, 249, 0.1);
+  --background: #0D1B2A;
+  --foreground: #F4EFE6;
+  --card-bg: #15263A;
+  --surface-2: rgba(244, 239, 230, 0.06);
+  --input-bg: #0F2133;
+
+  --primary: #BB221C;
+  --burgundy: #741513;
+  --secondary: #4F86F7;
+  --accent-gold: #F2A900;
+  --gold-ink: #F2A900;
+  --go: #D7FF3B;
+  --go-ink: #D7FF3B;
+  --chip: rgba(23, 84, 209, 0.32);
+  --chip-ink: #D6E3FF;
+
+  --border-color: rgba(244, 239, 230, 0.12);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card-bg: var(--card-bg);
+  --color-surface-2: var(--surface-2);
   --color-brand-primary: var(--primary);
+  --color-brand-burgundy: var(--burgundy);
   --color-brand-secondary: var(--secondary);
   --color-brand-gold: var(--accent-gold);
+  --color-gold-ink: var(--gold-ink);
+  --color-brand-go: var(--go);
+  --color-go-ink: var(--go-ink);
+  --color-chip: var(--chip);
+  --color-chip-ink: var(--chip-ink);
   --color-brand-border: var(--border-color);
-  
-  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --color-navy: #0D1B2A;
+
+  --font-sans: 'Poppins', sans-serif;
   --font-display: 'Oswald', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+html, body {
+  background: var(--background);
+  color: var(--foreground);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Poppins', sans-serif;
 }
 
 .font-display {
@@ -52,6 +86,56 @@ body {
   border-style: double;
   border-width: 3px;
 }
+
+/* ---- Calendar-page card: punched holes under the red strip ---- */
+.pk-holes {
+  height: 10px;
+  background-color: var(--card-bg);
+  background-image: radial-gradient(circle at 6px 0px, var(--background) 4.5px, transparent 5px);
+  background-size: 12px 10px;
+  background-repeat: repeat-x;
+}
+
+/* ---- Rubber stamp ---- */
+.pk-stamp {
+  transform: rotate(-9deg);
+  border: 2.5px solid currentColor;
+  border-radius: 6px;
+  padding: 2px 9px;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.14em;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+/*
+ * ---- Pop-ups (.pk-sheet) ----
+ * The older modals were written with fixed grey/white Tailwind classes.
+ * Inside a .pk-sheet those greys follow the theme instead, so every pop-up
+ * matches the app in both dark and light mode without rewriting each one.
+ */
+.pk-sheet {
+  background-color: var(--card-bg);
+  color: var(--foreground);
+  border: 1px solid var(--border-color);
+}
+.pk-sheet :is(.bg-white, .bg-gray-800, .bg-gray-900) { background-color: var(--card-bg); }
+.pk-sheet :is(.bg-gray-50, .bg-gray-100, .bg-gray-600, .bg-gray-700, .bg-gray-700\/50) { background-color: var(--surface-2); }
+.pk-sheet :is(.hover\:bg-gray-50, .hover\:bg-gray-100, .hover\:bg-gray-200, .hover\:bg-gray-600, .hover\:bg-gray-700):hover { background-color: var(--surface-2); }
+.pk-sheet :is(.text-gray-900, .text-gray-800, .text-gray-100, .text-gray-200) { color: var(--foreground); }
+.pk-sheet :is(.text-gray-700, .text-gray-600, .text-gray-300) { color: color-mix(in srgb, var(--foreground) 78%, transparent); }
+.pk-sheet :is(.text-gray-500, .text-gray-400) { color: color-mix(in srgb, var(--foreground) 58%, transparent); }
+.pk-sheet :is(.border-gray-100, .border-gray-200, .border-gray-300, .border-gray-600, .border-gray-700) { border-color: var(--border-color); }
+.pk-sheet :is(input:not([type='checkbox']):not([type='radio']):not([type='range']), select, textarea) {
+  background-color: var(--input-bg);
+  color: var(--foreground);
+  border-color: var(--border-color);
+}
+.pk-sheet :is(input, textarea)::placeholder { color: color-mix(in srgb, var(--foreground) 45%, transparent); }
+.pk-sheet input[type='checkbox'] { accent-color: var(--primary); }
+.pk-sheet .text-red-600, .pk-sheet .text-red-500 { color: #E5484D; }
 
 /* ---- Splash / loading ---- */
 @keyframes brand-sweep {
@@ -68,6 +152,16 @@ body {
 }
 .animate-brand-rise {
   animation: brand-rise .6s cubic-bezier(.22, .9, .3, 1) backwards;
+}
+
+/* ---- Stamp lands when you join ---- */
+@keyframes stamp-in {
+  0%   { opacity: 0; transform: rotate(-9deg) scale(1.6); }
+  60%  { opacity: 1; transform: rotate(-9deg) scale(0.94); }
+  100% { opacity: 1; transform: rotate(-9deg) scale(1); }
+}
+.animate-stamp-in {
+  animation: stamp-in .42s cubic-bezier(.22, .9, .3, 1) both;
 }
 
 /* ---- Hint tooltip: fade in, then a short buzz ---- */
@@ -87,8 +181,15 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-brand-sweep,
   .animate-brand-rise,
-  .animate-hint-in {
+  .animate-hint-in,
+  .animate-stamp-in {
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
   }
 }
+
+/* pk mark: white-p version on dark, navy-p version on light */
+.pk-mark-on-light { display: block; }
+.pk-mark-on-dark { display: none; }
+.dark .pk-mark-on-light { display: none; }
+.dark .pk-mark-on-dark { display: block; }

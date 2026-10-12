@@ -1,59 +1,42 @@
+import PkMark from './PkMark'
+
 interface BrandLogoProps {
-  /** Overall scale of the wordmark */
+  /** Overall scale of the lockup */
   size?: 'md' | 'lg' | 'xl'
   className?: string
 }
 
 /**
- * The full stacked Pickle Kitchen logo lockup:
- *   — 匹克廚房 —
- *      PICKLE
- *      KITCHEN
- *   HONG KONG ◆HK EST. 2024
- *   GEAR UP. PLAY WELL. LIVE MORE.
+ * Stacked Pickle Kitchen lockup for the splash and sign-in screens:
+ *   pk mark
+ *   PICKLE KITCHEN
+ *   匹克廚房
+ *   OWN THE KITCHEN   (signature line — masthead form per BRAND-LOCK)
  */
 export default function BrandLogo({ size = 'lg', className = '' }: BrandLogoProps) {
+  const markH = { md: 96, lg: 140, xl: 168 }[size]
   const wordmark = {
-    md: 'text-4xl md:text-5xl',
-    lg: 'text-6xl md:text-7xl',
-    xl: 'text-7xl md:text-8xl',
+    md: 'text-3xl',
+    lg: 'text-4xl md:text-5xl',
+    xl: 'text-5xl md:text-6xl',
   }[size]
 
   return (
     <div className={`flex flex-col items-center text-center select-none ${className}`}>
-      {/* Top rule + Chinese */}
-      <div className="flex items-center gap-3 mb-3">
-        <span className="h-px w-8 bg-brand-primary" />
-        <span className="font-display text-base md:text-lg tracking-[0.35em] text-brand-primary font-semibold pl-[0.35em]">
-          匹克廚房
-        </span>
-        <span className="h-px w-8 bg-brand-primary" />
-      </div>
-
-      {/* Wordmark */}
-      <h1 className={`font-display font-bold leading-[0.92] tracking-tight text-foreground ${wordmark}`}>
-        PICKLE<br />KITCHEN
+      <PkMark height={markH} />
+      <h1 className={`mt-6 font-display font-semibold uppercase tracking-[0.12em] leading-none text-foreground ${wordmark}`}>
+        Pickle Kitchen
       </h1>
-
-      {/* EST. bar */}
-      <div className="flex items-center gap-2 mt-5 w-full max-w-[280px]">
-        <span className="h-px flex-1 bg-brand-border" />
-        <span className="text-[10px] tracking-[0.25em] text-foreground/60 font-display font-semibold whitespace-nowrap">
-          HONG KONG
+      <span className="mt-3 font-display text-base tracking-[0.4em] pl-[0.4em] text-foreground/70">
+        匹克廚房
+      </span>
+      <span className="mt-5 flex items-center gap-3">
+        <span className="h-px w-8 bg-brand-primary" />
+        <span className="font-display text-xs tracking-[0.3em] pl-[0.3em] font-semibold text-foreground/60">
+          OWN THE KITCHEN
         </span>
-        <span className="relative inline-flex items-center justify-center w-5 h-5 rotate-45 bg-brand-primary shrink-0">
-          <span className="-rotate-45 text-[8px] font-bold text-white leading-none">HK</span>
-        </span>
-        <span className="text-[10px] tracking-[0.25em] text-foreground/60 font-display font-semibold whitespace-nowrap">
-          EST. 2024
-        </span>
-        <span className="h-px flex-1 bg-brand-border" />
-      </div>
-
-      {/* Tagline */}
-      <p className="mt-4 font-display tracking-[0.2em] text-brand-primary text-xs md:text-sm font-semibold">
-        GEAR UP. PLAY WELL. LIVE MORE.
-      </p>
+        <span className="h-px w-8 bg-brand-primary" />
+      </span>
     </div>
   )
 }

@@ -12,7 +12,9 @@ import CalendarView from '@/components/CalendarView'
 import { Session, RSVP } from '@/types'
 import Sidebar from '../components/Sidebar'
 import BrandLogo from '../components/BrandLogo'
-import { Settings, DollarSign, X } from 'lucide-react'
+import { Settings, DollarSign, X, Plus, LayoutGrid, CalendarDays, Trophy, UserRound } from 'lucide-react'
+import PkMark from '../components/PkMark'
+import WeekStrip from '../components/WeekStrip'
 import { format, addMonths, isSameDay } from 'date-fns'
 
 {/* import { useSwipeable } from 'react-swipeable'
@@ -51,6 +53,8 @@ export default function Home() {
   const [paymentDone, setPaymentDone] = useState<string[]>([])
   const [rsvpLoading, setRsvpLoading] = useState<string | null>(null)
   const [flashSessionId, setFlashSessionId] = useState<string | null>(null)
+  const [showMonth, setShowMonth] = useState(false)
+  const [activeTab, setActiveTab] = useState<string>('sessions')
 
 
   // Load user profile
@@ -156,12 +160,8 @@ export default function Home() {
     // Default to dark mode if no preference saved
     const isDarkMode = savedDarkMode === null ? true : savedDarkMode === 'true'
     setDarkMode(isDarkMode)
-    
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark')
-      document.body.style.backgroundColor = '#111827'
-      document.body.style.color = '#f9fafb'
-    }
+    // Colours come from the theme tokens in globals.css; only the class switches.
+    document.documentElement.classList.toggle('dark', isDarkMode)
   }, [])
 
   const toggleDarkMode = () => {
@@ -169,15 +169,7 @@ export default function Home() {
     setDarkMode(newDarkMode)
     localStorage.setItem('darkMode', newDarkMode.toString())
     
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark')
-      document.body.style.backgroundColor = '#111827'
-      document.body.style.color = '#f9fafb'
-    } else {
-      document.documentElement.classList.remove('dark')
-      document.body.style.backgroundColor = ''
-      document.body.style.color = ''
-    }
+    document.documentElement.classList.toggle('dark', newDarkMode)
   }
 
   useEffect(() => {
@@ -602,79 +594,68 @@ export default function Home() {
     )
   }
 
+  const firstName = (userProfile?.name || user?.email?.split('@')[0] || '').split(' ')[0]
+
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
       {/* Header (only when signed in; logged-out shows the splash hero) */}
       {user && (
-      <div className="border-b-2 border-brand-border bg-card-bg/60 backdrop-blur-md sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
-          <div className="flex items-center gap-3">
-            {/* Chinese wordmark holds the left edge so the crest can sit centered.
-                flex-1 on both flanks keeps the crest optically centered. */}
-            <div className="hidden md:flex flex-1 min-w-0 items-center">
-              <span className="font-display text-base lg:text-lg tracking-[0.35em] text-brand-primary font-semibold pl-[0.35em] select-none whitespace-nowrap">
-                匹克廚房
-              </span>
-            </div>
+      <header className="sticky top-0 z-30 border-b border-brand-border bg-background/90 backdrop-blur-md pt-[env(safe-area-inset-top)]">
+        <div className="max-w-7xl mx-auto px-4 py-3.5 flex items-center justify-between gap-3">
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="flex items-center gap-3 min-w-0"
+            aria-label="Pickle Kitchen — back to top"
+          >
+            <PkMark height={48} />
+            <span className="flex flex-col items-start gap-[5px] min-w-0">
+              <span className="font-display text-[17px] font-semibold tracking-[0.14em] leading-none">PICKLE KITCHEN</span>
+              <span className="text-[10px] font-semibold tracking-[0.3em] leading-none text-foreground/60">匹克廚房</span>
+            </span>
+          </button>
 
-            {/* Crest replaces the old text lockup */}
-            <img
-              src={darkMode ? '/logo-badge.png' : '/logo-badge-light.png'}
-              alt="Pickle Kitchen — 匹克廚房, Hong Kong, est. 2024"
-              width={512}
-              height={512}
-              className="h-14 w-14 md:h-[68px] md:w-[68px] shrink-0 select-none"
-            />
-
-            {user ? (
-              <div className="flex flex-1 min-w-0 items-center justify-end gap-2">
-                <span className="hidden md:block text-sm font-semibold text-foreground/75 mr-2 truncate">
-                  Hi, {userProfile?.name || user.email}
-                </span>
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="shrink-0 bg-brand-primary text-white px-4 py-2.5 rounded font-display text-xs uppercase tracking-wider hover:bg-brand-primary/95 transition-all font-semibold"
-                >
-                  Create Session
-                </button>
-                <button
-                  onClick={() => setShowSidebar(!showSidebar)}
-                  className="shrink-0 p-2 text-foreground/70 hover:bg-foreground/5 rounded-lg transition-colors"
-                  title="Settings"
-                >
-                  <Settings className="w-5 h-5" />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowAuthModal(true)}
-                className="bg-brand-primary text-white px-5 py-2.5 rounded font-display text-xs uppercase tracking-wider hover:bg-brand-primary/95 transition-all font-semibold"
-              >
-                Login / Sign Up
-              </button>
-            )}
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="hidden md:block text-sm font-semibold text-foreground/75 mr-2 truncate">
+              Hi, {userProfile?.name || user.email}
+            </span>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              aria-label="Create session"
+              title="Create session"
+              className="w-11 h-11 rounded-full bg-brand-primary text-white flex items-center justify-center hover:brightness-110 active:scale-95 transition-all"
+            >
+              <Plus className="w-5 h-5" strokeWidth={2.6} />
+            </button>
+            <button
+              onClick={() => setShowSidebar(!showSidebar)}
+              className="hidden lg:inline-flex w-11 h-11 items-center justify-center text-foreground/70 hover:bg-surface-2 rounded-full transition-colors"
+              title="Settings"
+              aria-label="Settings"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
           </div>
         </div>
-      </div>
+      </header>
       )}
 
       {/* Main Content */}
       {user ? (
-        <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+        <div className="max-w-7xl mx-auto px-4 pt-5 pb-32 lg:pb-12 md:pt-8">
           {/* Post-game payment prompt (session creator only, last 24h, until used/dismissed) */}
           {(() => {
             const pending = recentEnded.filter((s) => !paymentDone.includes(s.id))
             if (pending.length === 0) return null
             return (
-              <div className="mb-6 rounded-lg border border-brand-secondary/40 bg-brand-secondary/10 p-4">
+              <div className="mb-6 rounded-xl border border-brand-gold/50 bg-brand-gold/[0.07] p-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <DollarSign className="w-5 h-5 text-brand-secondary" />
-                  <h3 className="font-display text-sm font-bold uppercase tracking-wider text-brand-secondary">Collect for your recent game</h3>
+                  <DollarSign className="w-5 h-5 text-gold-ink" />
+                  <h3 className="font-display text-sm font-bold uppercase tracking-wider text-gold-ink">Collect for your recent game</h3>
                 </div>
                 <p className="text-xs text-foreground/60 mb-3">Your session just wrapped — send a payment request before it slips your mind.</p>
                 <div className="space-y-2">
                   {pending.map((s) => (
-                    <div key={s.id} className="flex items-center justify-between gap-2 rounded-lg bg-card-bg/60 border border-brand-border px-3 py-2">
+                    <div key={s.id} className="flex items-center justify-between gap-2 rounded-lg bg-card-bg border border-brand-border px-3 py-2">
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-foreground truncate">{s.title}</p>
                         <p className="text-xs text-foreground/60">{format(new Date(s.date_time), 'EEE, MMM d · h:mm a')}</p>
@@ -682,7 +663,7 @@ export default function Home() {
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         <button
                           onClick={() => setPaymentSession(s)}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-secondary text-white hover:bg-brand-secondary/90 transition-colors whitespace-nowrap"
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-brand-gold text-navy hover:brightness-105 transition-colors whitespace-nowrap"
                         >
                           <DollarSign className="w-3.5 h-3.5" /> Request Payment
                         </button>
@@ -690,6 +671,7 @@ export default function Home() {
                           onClick={() => markPaymentDone(s.id)}
                           className="p-1.5 text-foreground/40 hover:text-foreground/70"
                           title="Dismiss"
+                          aria-label="Dismiss"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -702,43 +684,55 @@ export default function Home() {
           })()}
 
           <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
-            {/* Left Column - Calendar - Hidden on mobile, shown on desktop */}
+            {/* Left Column - Calendar - desktop only */}
             <div className="hidden lg:block w-80 flex-shrink-0">
-              <div className="rounded-lg border border-brand-border bg-card-bg/60 p-6 backdrop-blur-sm sticky top-28">
-                <CalendarView 
-                  sessions={sessions} 
+              <div className="rounded-xl border border-brand-border bg-card-bg p-6 sticky top-28">
+                <CalendarView
+                  sessions={sessions}
                   darkMode={darkMode}
                   onDateClick={handleCalendarDateClick}
                 />
               </div>
             </div>
 
-            {/* Right Column - Sessions - Full width on mobile */}
-            <div className="flex-1">
-              {/* Mobile Calendar Banner */}
-              <div className="lg:hidden mb-4 -mx-4 px-4">
-                <div className="rounded-lg p-3 bg-card-bg/60 border border-brand-border backdrop-blur-sm">
-                  <MobileCalendarSwiper
-                    sessions={sessions}
-                    darkMode={darkMode}
-                    onDateClick={handleCalendarDateClick}
-                    currentMonthOffset={currentMonthOffset}
-                    setCurrentMonthOffset={setCurrentMonthOffset}
-                  />
+            {/* Right Column - Sessions */}
+            <div className="flex-1 min-w-0 max-w-2xl">
+              <div className="flex items-end justify-between mb-5">
+                <div className="flex flex-col gap-1">
+                  {firstName && <span className="text-xs font-semibold text-foreground/60">Hi {firstName}</span>}
+                  <h1 className="m-0 font-display text-[34px] font-semibold uppercase tracking-[0.02em] leading-none">Upcoming</h1>
                 </div>
+                <span className="font-display text-[15px] tracking-[0.3em] text-gold-ink pb-1">即將對決</span>
               </div>
 
-              <h2 className="text-xl md:text-2xl font-display font-bold tracking-wider text-brand-primary border-b border-brand-border pb-2 mb-6 uppercase flex items-center justify-between">
-                <span>Upcoming Matches | 即將對決</span>
-              </h2>
+              {/* Week strip + month (mobile) */}
+              <div id="pk-calendar" className="lg:hidden mb-6 scroll-mt-24">
+                <WeekStrip
+                  sessions={sessions}
+                  onDayClick={handleCalendarDateClick}
+                  monthOpen={showMonth}
+                  onToggleMonth={() => setShowMonth((v) => !v)}
+                />
+                {showMonth && (
+                  <div className="mt-3 rounded-xl p-3 bg-card-bg border border-brand-border">
+                    <MobileCalendarSwiper
+                      sessions={sessions}
+                      darkMode={darkMode}
+                      onDateClick={handleCalendarDateClick}
+                      currentMonthOffset={currentMonthOffset}
+                      setCurrentMonthOffset={setCurrentMonthOffset}
+                    />
+                  </div>
+                )}
+              </div>
 
               {sessions.length > 0 ? (
-                <div className="space-y-4 md:space-y-6">
+                <div className="space-y-5 md:space-y-6">
                   {sessions.map((session) => (
                     <div
                       key={session.id}
                       id={`session-${session.id}`}
-                      className={`scroll-mt-28 rounded-[10px] transition-shadow duration-500 ${flashSessionId === session.id ? 'ring-2 ring-brand-gold' : ''}`}
+                      className={`scroll-mt-24 rounded-b-2xl rounded-t-md transition-shadow duration-500 ${flashSessionId === session.id ? 'ring-2 ring-brand-gold ring-offset-2 ring-offset-background' : ''}`}
                     >
                     <SessionCard
                       session={session}
@@ -756,40 +750,60 @@ export default function Home() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 rounded-lg bg-card-bg/30 border border-brand-border">
+                <div className="text-center py-12 rounded-xl bg-card-bg border border-brand-border">
                   <p className="font-medium text-foreground/60 text-sm">
-                    No sessions yet! Click "Create Session" to list a new match.
+                    No sessions yet — tap + to create one.
                   </p>
                 </div>
               )}
             </div>
           </div>
+
+          {/* Bottom tab bar (mobile) */}
+          <nav
+            aria-label="Main"
+            className="lg:hidden fixed bottom-0 inset-x-0 z-30 grid grid-cols-4 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+10px)] bg-background/95 backdrop-blur-md border-t border-brand-border"
+          >
+            {[
+              { key: 'sessions', label: 'Sessions', icon: <LayoutGrid className="w-[22px] h-[22px]" />, onClick: () => { setActiveTab('sessions'); window.scrollTo({ top: 0, behavior: 'smooth' }) } },
+              { key: 'calendar', label: 'Calendar', icon: <CalendarDays className="w-[22px] h-[22px]" />, onClick: () => { setActiveTab('calendar'); setShowMonth(true); setTimeout(() => document.getElementById('pk-calendar')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50) } },
+              { key: 'ranks', label: 'Ranks', icon: <Trophy className="w-[22px] h-[22px]" />, onClick: () => { setShowAllStatsModal(true) } },
+              { key: 'me', label: 'Me', icon: <UserRound className="w-[22px] h-[22px]" />, onClick: () => { setShowSidebar(true) } },
+            ].map((t) => (
+              <button
+                key={t.key}
+                onClick={t.onClick}
+                className={`flex flex-col items-center gap-1 py-1.5 ${activeTab === t.key ? 'text-gold-ink' : 'text-foreground/60'}`}
+                aria-current={activeTab === t.key ? 'page' : undefined}
+              >
+                {t.icon}
+                <span className={`text-[11px] ${activeTab === t.key ? 'font-extrabold' : 'font-semibold'}`}>{t.label}</span>
+              </button>
+            ))}
+          </nav>
         </div>
       ) : (
         <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
           <BrandLogo size="lg" />
 
           {/* Join the Crew */}
-          <div className="mt-12 w-full max-w-xs">
-            <p className="text-center text-[11px] font-display tracking-[0.3em] text-foreground/50 uppercase mb-4">
-              Join the Crew · 加入匹克廚房
-            </p>
+          <div className="mt-14 w-full max-w-xs">
             <div className="space-y-3">
               <button
                 onClick={() => { setAuthMode('login'); setShowAuthModal(true) }}
-                className="w-full bg-[#F2E7D6] text-[#0D1B2A] py-3.5 rounded-full font-display uppercase tracking-[0.2em] text-sm font-semibold hover:bg-[#e9dcc6] transition-all shadow-md"
+                className="w-full h-[52px] bg-brand-primary text-white rounded-xl font-display uppercase tracking-[0.18em] text-[15px] font-semibold hover:brightness-110 active:scale-[0.98] transition-all"
               >
                 Log In
               </button>
               <button
                 onClick={() => { setAuthMode('signup'); setShowAuthModal(true) }}
-                className="w-full border border-foreground/30 text-foreground py-3.5 rounded-full font-display uppercase tracking-[0.2em] text-sm font-semibold hover:bg-foreground/5 transition-all"
+                className="w-full h-[52px] border border-foreground/30 text-foreground rounded-xl font-display uppercase tracking-[0.18em] text-[15px] font-semibold hover:bg-surface-2 transition-all"
               >
                 Sign Up
               </button>
             </div>
-            <p className="mt-6 text-center text-xs text-foreground/50 leading-relaxed">
-              See, create, and join upcoming local matches.
+            <p className="mt-6 text-center text-xs text-foreground/55 leading-relaxed">
+              See, create and join upcoming games · 加入匹克廚房
             </p>
           </div>
         </div>

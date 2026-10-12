@@ -29,7 +29,7 @@ export default function ChefRanksInfo({ darkMode, currentTierName, className = '
       {open && (
         <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4" onClick={() => setOpen(false)}>
           <div
-            className={`${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} rounded-lg p-5 w-full max-w-sm max-h-[80vh] overflow-y-auto`}
+            className={`pk-sheet ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} rounded-2xl p-5 w-full max-w-sm max-h-[80vh] overflow-y-auto`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-1">
